@@ -80,11 +80,7 @@
 		"workbench.editor.scrollToSwitchTabs": true,
 		"workbench.iconTheme": "eq-material-theme-icons-darker",
 		"terminal.integrated.shell.linux": "/usr/bin/zsh",
-		"C_Cpp.default.includePath": [
-			"/usr/include/node",
-			"${workspaceFolder}/include",
-			"${workspaceFolder}/node_modules/node-addon-api"
-		]
+		"C_Cpp.default.includePath": ["/usr/include/node", "${workspaceFolder}/include", "${workspaceFolder}/node_modules/node-addon-api"]
 	},
 
 	// VSCode Extension by their IDs
