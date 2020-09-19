@@ -1,6 +1,6 @@
 <div align="center">
 
-# @skyra/api
+# @skyra/ai
 
 **Advanced Gaming AI for Skyra**
 
@@ -20,7 +20,7 @@ For a long time we have had games that the users of [Skyra] could play. These ga
 ## Installation
 
 ```sh
-yarn add @skyra/api
+yarn add @skyra/ai
 ```
 
 ## Buy us some doughnuts
