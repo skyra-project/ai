@@ -12,6 +12,7 @@ node_modules/
 .env.production.local
 
 # Ignore bwd folders
+dist/
 build/
 *.tsbuildinfo
 
