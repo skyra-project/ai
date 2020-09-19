@@ -59,6 +59,7 @@ namespace TicTacToe
 	TicTacToe::ai_results min(ai_board &board, int_fast8_t remaining, int_fast8_t alpha, int_fast8_t beta) noexcept;
 	TicTacToe::ai_results max(ai_board &board, int_fast8_t remaining, int_fast8_t alpha, int_fast8_t beta) noexcept;
 
+	// Maximum is Players::Machine
 	TicTacToe::ai_results max(ai_board &board, int_fast8_t remaining, int_fast8_t alpha, int_fast8_t beta) noexcept
 	{
 		const auto winner = status(board);
@@ -71,6 +72,12 @@ namespace TicTacToe
 		if (remaining == 0)
 			return {0, -1};
 
+		// Possible values for maxv are:
+		// -1 - loss
+		//  0 - a tie
+		//  1 - win
+		//
+		// We're initially setting it to -2 as worse than the worst case:
 		int_fast8_t maxv = -2;
 		int_fast8_t posi = -1;
 
@@ -78,15 +85,20 @@ namespace TicTacToe
 		{
 			if (board[i] == Players::Unset)
 			{
+				// On the empty field player Machine makes a move and calls Min
+				// That's one branch of the game tree:
 				board[i] = Players::Machine;
 
 				const auto m = TicTacToe::min(board, remaining - 1, alpha, beta).points;
+
+				// Fixing the maxv value if needed:
 				if (m > maxv)
 				{
 					maxv = m;
 					posi = i;
 				}
 
+				// Setting back the field to empty:
 				board[i] = Players::Unset;
 
 				if (maxv >= beta)
@@ -104,6 +116,7 @@ namespace TicTacToe
 		return {maxv, posi};
 	}
 
+	// Minimum is Players::Player
 	TicTacToe::ai_results min(ai_board &board, int_fast8_t remaining, int_fast8_t alpha, int_fast8_t beta) noexcept
 	{
 		const auto winner = status(board);
@@ -116,6 +129,12 @@ namespace TicTacToe
 		if (remaining == 0)
 			return {0, -1};
 
+		// Possible values for minv are:
+		// -1 - win
+		//  0 - a tie
+		//  1 - loss
+		//
+		// We're initially setting it to 2 as worse than the worst case:
 		int_fast8_t minv = 2;
 		int_fast8_t posi = -1;
 
@@ -123,15 +142,20 @@ namespace TicTacToe
 		{
 			if (board[i] == Players::Unset)
 			{
+				// On the empty field player Player makes a move and calls Max
+				// That's one branch of the game tree:
 				board[i] = Players::Player;
 
 				const auto m = TicTacToe::max(board, remaining - 1, alpha, beta).points;
+
+				// Fixing the minv value if needed:
 				if (m < minv)
 				{
 					minv = m;
 					posi = i;
 				}
 
+				// Setting back the field to empty:
 				board[i] = Players::Unset;
 
 				if (minv <= alpha)
@@ -149,6 +173,7 @@ namespace TicTacToe
 		return {minv, posi};
 	}
 
+	// Returns the optimal move from the AI, -1 if no move was possible.
 	int_fast8_t position(ai_board &board, int_fast8_t remaining) noexcept
 	{
 		// If remaining is 9, then the board is empty.
