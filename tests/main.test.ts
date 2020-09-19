@@ -7,6 +7,7 @@ describe('TicTacToe', () => {
 	});
 
 	test('GIVEN null THEN throws TypeError', () => {
+		// @ts-expect-error
 		expect(() => ticTacToe(null)).toThrow('data must be a typed array');
 	});
 
@@ -73,6 +74,18 @@ describe('TicTacToe', () => {
 
 	test('GIVEN descending diagonal (2) THEN returns 8', () => {
 		expect(ticTacToe(new Uint8Array([2, 0, 0, 0, 2, 0, 1, 1, 0]))).toEqual(8);
+	});
+
+	test('GIVEN filled board (loss) THEN returns -1', () => {
+		expect(ticTacToe(new Uint8Array([1, 1, 1, 1, 1, 1, 1, 1, 1]))).toEqual(-1);
+	});
+
+	test('GIVEN filled board (draw) THEN returns -1', () => {
+		expect(ticTacToe(new Uint8Array([1, 2, 1, 1, 2, 1, 2, 1, 2]))).toEqual(-1);
+	});
+
+	test('GIVEN filled board (win) THEN returns -1', () => {
+		expect(ticTacToe(new Uint8Array([2, 2, 2, 2, 2, 2, 2, 2, 2]))).toEqual(-1);
 	});
 });
 
