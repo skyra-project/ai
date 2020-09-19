@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [1.0.1](https://github.com/skyra-project/ai/compare/v1.0.0...v1.0.1) (2020-09-19)
+
+### Bug Fixes
+
+-   **docs:** fix copypasta mistakes ([6fe7735](https://github.com/skyra-project/ai/commit/6fe7735d0383ea9409cb819bd6ebf378827c2457))
+
 ## 1.0.0 (2020-09-19)
 
 ### Features
