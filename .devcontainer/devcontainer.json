@@ -1,9 +1,6 @@
 {
 	"name": "Node-TS PowerUser Image",
-	"build": {
-		"dockerfile": "Dockerfile",
-		"args": { "VARIANT": "14" }
-	},
+	"image": "favware/codespaces-containers:base",
 
 	// VSCode settings
 	"settings": {
@@ -78,9 +75,8 @@
 		"window.zoomLevel": 0,
 		"workbench.colorTheme": "Atom One Dark",
 		"workbench.editor.scrollToSwitchTabs": true,
-		"workbench.iconTheme": "eq-material-theme-icons-darker",
-		"terminal.integrated.shell.linux": "/usr/bin/zsh",
-		"C_Cpp.default.includePath": ["/usr/include/node", "${workspaceFolder}/include", "${workspaceFolder}/node_modules/node-addon-api"]
+		"workbench.iconTheme": "pkief.material-icon-theme",
+		"terminal.integrated.shell.linux": "/usr/bin/zsh"
 	},
 
 	// VSCode Extension by their IDs
@@ -99,8 +95,7 @@
 		"esbenp.prettier-vscode",
 		"tabnine.tabnine-vscode",
 		"redhat.vscode-yaml",
-		"akamud.vscode-theme-onedark",
-		"ms-vscode.cpptools"
+		"akamud.vscode-theme-onedark"
 	],
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
