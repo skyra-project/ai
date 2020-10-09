@@ -10,7 +10,7 @@
 	"scripts": {
 		"prepublishOnly": "yarn build",
 		"test": "jest",
-		"clean": "rimraf build",
+		"clean": "rimraf build dist",
 		"build": "run-p build:node build:cpp",
 		"build:cpp": "run-s gyp**",
 		"build:node": "rollup -c rollup.config.ts",
