@@ -55,6 +55,7 @@
 	"files": [
 		"src",
 		"include",
+		"binding.gyp",
 		"dist",
 		"!dist/.tsbuildinfo"
 	],
