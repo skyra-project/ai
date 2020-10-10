@@ -88,5 +88,3 @@ describe('TicTacToe', () => {
 		expect(ticTacToe(new Uint8Array([2, 2, 2, 2, 2, 2, 2, 2, 2]))).toEqual(-1);
 	});
 });
-
-describe('Connect-Four', () => {});
