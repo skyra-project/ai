@@ -1364,10 +1364,10 @@
     estree-walker "^1.0.1"
     picomatch "^2.2.2"
 
-"@sapphire/ts-config@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@sapphire/ts-config/-/ts-config-1.0.2.tgz#348bb518385d55edd34dc618623f8ba8c895b94d"
-  integrity sha512-8BDo5Iy7VzTYH5tF5Jt4JKxpo3TsostAdNMTMvnHrbnLPcdiBlVE5C76GBz1r0CSO3ZwB8utrzSOIVEjwsAeiA==
+"@sapphire/ts-config@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@sapphire/ts-config/-/ts-config-1.0.3.tgz#e923ca8b04a1f759961cee309ed8f64880bfa9a1"
+  integrity sha512-Id//WIO0zAj07TqO8wkr9IboQwzW/ZKuTP2BA2UlnmnJ4j3ShkKazRa2m3p6FWpnlUbDf2GN8In1lYc+GXTvNQ==
 
 "@sinonjs/commons@^1.7.0":
   version "1.8.1"
