@@ -190,8 +190,8 @@ namespace TicTacToe
 		//
 		// The center is 4, therefore, we return this number.
 		//
-		// Hardcoding this is useful, on an empty board, there are 2,439,530,234,167 possibilities.
-		// On a board with one move in, there are 84,998,978,956 possibilities. That's a lot less.
+		// Hardcoding this is useful, on an empty board, there are 362,880 possibilities.
+		// On a board with one move in, there are 40,320 possibilities. That's a lot less.
 		if (remaining == 9) {
 			return 4;
 		}
