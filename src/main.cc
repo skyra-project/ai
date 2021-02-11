@@ -4,20 +4,20 @@
 #include <array>
 #include <napi.h>
 
-Napi::Number TicTacToeHandler(const Napi::CallbackInfo& info) {
+Napi::Number tic_tac_toe_handler(const Napi::CallbackInfo& info) {
   auto env = info.Env();
 
   if (!info[0].IsTypedArray()) {
-    NAPI_THROW(Napi::TypeError::New(env, "data must be a typed array"), {});
+    NAPI_THROW(Napi::TypeError::New(env, "data must be a typed array"));
   }
 
   const auto& v = info[0].As<Napi::Uint8Array>();
-  if (v.ElementLength() != 9) {
-    NAPI_THROW(Napi::TypeError::New(env, "data must have exactly 9 numbers"), {});
+  if (v.ElementLength() != tic_tac_toe::board_cells) {
+    NAPI_THROW(Napi::TypeError::New(env, "data must have exactly 9 numbers"));
   }
 
   tic_tac_toe::ai_board board{};
-  int remaining = 9;
+  int remaining = tic_tac_toe::board_cells;
 
   for (size_t i = 0; i < board.size(); ++i) {
     if ((board[i] = static_cast<Players>(v[i])) != Players::Unset)
@@ -27,7 +27,7 @@ Napi::Number TicTacToeHandler(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, tic_tac_toe::position(board, remaining));
 }
 
-Napi::Number ConnectFourHandler(const Napi::CallbackInfo& info) {
+Napi::Number connect_four_handler(const Napi::CallbackInfo& info) {
   auto env = info.Env();
 
   if (!info[0].IsTypedArray()) {
@@ -35,7 +35,7 @@ Napi::Number ConnectFourHandler(const Napi::CallbackInfo& info) {
   }
 
   const auto& v = info[0].As<Napi::Uint8Array>();
-  if (v.ElementLength() != 42) {
+  if (v.ElementLength() != connect_four::board_cells) {
     NAPI_THROW(Napi::TypeError::New(env, "data must have exactly 42 numbers"), {});
   }
 
@@ -46,7 +46,7 @@ Napi::Number ConnectFourHandler(const Napi::CallbackInfo& info) {
     maximum_depth = 5;
 
   connect_four::ai_board board{};
-  int_fast8_t remaining = 42;
+  int_fast8_t remaining = connect_four::board_cells;
 
   for (size_t i = 0; i < board.cells.size(); ++i) {
     if ((board.cells[i] = static_cast<Players>(v[i])) != Players::Unset)
@@ -57,8 +57,8 @@ Napi::Number ConnectFourHandler(const Napi::CallbackInfo& info) {
 }
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-  exports.Set(Napi::String::New(env, "ticTacToe"), Napi::Function::New(env, TicTacToeHandler));
-  exports.Set(Napi::String::New(env, "connectFour"), Napi::Function::New(env, ConnectFourHandler));
+  exports["ticTacToe"] = Napi::Function::New(env, tic_tac_toe_handler);
+  exports["connectFour"] = Napi::Function::New(env, connect_four_handler);
   return exports;
 }
 

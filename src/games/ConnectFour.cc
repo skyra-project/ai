@@ -4,8 +4,6 @@
 #include <limits>
 
 namespace connect_four {
-  constexpr size_t undefined_last_move{std::numeric_limits<size_t>::max()};
-
   std::array<uint_fast8_t, board_cells> available_bottom{     //
       0b0011, 0b0011, 0b0011, 0b0011, 0b0011, 0b0011, 0b0011, //
       0b0011, 0b0011, 0b0011, 0b0011, 0b0011, 0b0011, 0b0011, //
@@ -35,7 +33,8 @@ namespace connect_four {
       0b0011, 0b0111, 0b0111, 0b0111, 0b0110, 0b0101, 0b0100, //
       0b0011, 0b0011, 0b0011, 0b0011, 0b0010, 0b0001, 0b0000};
 
-  int_fast8_t no_column{-1};
+  constexpr size_t undefined_last_move{std::numeric_limits<size_t>::max()};
+  constexpr int_fast8_t no_column{-1};
 
   struct ai_results {
     int_fast8_t points;
