@@ -8,12 +8,12 @@ Napi::Number tic_tac_toe_handler(const Napi::CallbackInfo& info) {
   auto env = info.Env();
 
   if (!info[0].IsTypedArray()) {
-    NAPI_THROW(Napi::TypeError::New(env, "data must be a typed array"));
+    NAPI_THROW(Napi::TypeError::New(env, "data must be a typed array"), {});
   }
 
   const auto& v = info[0].As<Napi::Uint8Array>();
   if (v.ElementLength() != tic_tac_toe::board_cells) {
-    NAPI_THROW(Napi::TypeError::New(env, "data must have exactly 9 numbers"));
+    NAPI_THROW(Napi::TypeError::New(env, "data must have exactly 9 numbers"), {});
   }
 
   tic_tac_toe::ai_board board{};
