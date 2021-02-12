@@ -4,6 +4,7 @@
       "target_name": "skyra-ai",
       "sources": [
         "src/games/TicTacToe.cc",
+        "src/games/ConnectFour.cc",
         "src/main.cc"
       ],
       "include_dirs": [
