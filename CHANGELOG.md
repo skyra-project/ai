@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/skyra-project/ai/compare/v1.0.2...v1.1.0) (2021-02-18)
+
+### Features
+
+-   added ConnectFour ([#19](https://github.com/skyra-project/ai/issues/19)) ([1b098fe](https://github.com/skyra-project/ai/commit/1b098fe21d7a4aa1bbdbe691c4c296503c3a9e9d))
+
 ### [1.0.2](https://github.com/skyra-project/ai/compare/v1.0.1...v1.0.2) (2020-10-09)
 
 ### Bug Fixes
