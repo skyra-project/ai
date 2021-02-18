@@ -19,6 +19,7 @@ export default {
 			sourcemap: true
 		}
 	],
+	external: ['bindings'],
 	plugins: [
 		cleaner({
 			targets: ['./dist']
