@@ -21,7 +21,7 @@
 		"update": "yarn upgrade-interactive --latest",
 		"install": "node-gyp rebuild",
 		"prepublishOnly": "yarn build",
-		"husky:setup": "husky install .github/husky"
+		"prepare": "husky install .github/husky"
 	},
 	"dependencies": {
 		"bindings": "^1.5.0",
