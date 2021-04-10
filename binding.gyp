@@ -2,6 +2,9 @@
   "targets": [
     {
       "target_name": "skyra-ai",
+      "dependencies": [
+        "deps/binding.gyp:googletest"
+      ],
       "sources": [
         "src/games/TicTacToe.cc",
         "src/games/ConnectFour.cc",
@@ -26,29 +29,28 @@
         "VCCLCompilerTool": {
           "ExceptionHandling": 0,
           "WarningLevel": 4,
-          "EnablePREfast": "true",
+          "EnablePREfast": "true"
         }
       },
       "cflags": [ "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ],
-      "cflags_cc": [ "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ],
+      "cflags_cc": [ "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ]
     },
     {
       "target_name": "skyra-ai-tests",
+      "dependencies": [
+        "deps/binding.gyp:googletest"
+      ],
       "type": "executable",
       "sources": [
         "tests/Connect4.cc",
         "src/games/TicTacToe.cc",
-        "src/games/ConnectFour.cc",
+        "src/games/ConnectFour.cc"
       ],
       "include_dirs": [
-        "<(module_root_dir)/include",
-        "googletest/googletest/include"
-      ],
-      "libraries": [
-        "-lgtest -lgtest_main", "-L../googletest/build/lib"
+        "<(module_root_dir)/include"
       ],
       "cflags": [ "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ],
-      "cflags_cc": [ "-std=c++17", "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ]
+      "cflags_cc": [ "-std=c++17", "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ],
     }
   ]
 }

@@ -45,6 +45,8 @@ jobs:
     steps:
       - name: Checkout Project
         uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v2
         with:
@@ -74,6 +76,8 @@ jobs:
     steps:
       - name: Checkout Project
         uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
       - name: Use Node.js ${{ matrix.node_version }}
         uses: actions/setup-node@v2
         with:
