@@ -31,6 +31,24 @@
       },
       "cflags": [ "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ],
       "cflags_cc": [ "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ],
+    },
+    {
+      "target_name": "skyra-ai-tests",
+      "type": "executable",
+      "sources": [
+        "tests/Connect4.cc",
+        "src/games/TicTacToe.cc",
+        "src/games/ConnectFour.cc",
+      ],
+      "include_dirs": [
+        "<(module_root_dir)/include",
+        "googletest/googletest/include"
+      ],
+      "libraries": [
+        "-lgtest -lgtest_main", "-L../googletest/build/lib"
+      ],
+      "cflags": [ "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ],
+      "cflags_cc": [ "-std=c++17", "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ]
     }
   ]
 }
