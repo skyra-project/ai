@@ -87,7 +87,21 @@ jobs:
         with:
           path: node_modules
           key: ${{ runner.os }}-${{ matrix.node_version }}-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v1.8
+        with:
+          cmake-version: '3.16.x'
       - name: Install Dependencies
         run: yarn --frozen-lockfile
+      - name: Build C++ tests
+        run: mkdir build-tests && cd build-tests && cmake .. && cmake --build . && cd ..
       - name: Run tests
         run: yarn test
+      - name: Run C++ Tests
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            ./build-tests/Debug/skyra_ai_tests.exe
+          else
+            ./build-tests/skyra_ai_tests
+          fi
+        shell: bash
