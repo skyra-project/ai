@@ -26,11 +26,11 @@
         "VCCLCompilerTool": {
           "ExceptionHandling": 0,
           "WarningLevel": 4,
-          "EnablePREfast": "true",
+          "EnablePREfast": "true"
         }
       },
       "cflags": [ "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ],
-      "cflags_cc": [ "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ],
+      "cflags_cc": [ "-Werror", "-Wall", "-Wextra", "-Wpedantic", "-Wunused-parameter", "-fno-exceptions" ]
     }
   ]
 }

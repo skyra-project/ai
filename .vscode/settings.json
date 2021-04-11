@@ -71,5 +71,6 @@
 		"xlocnum": "cpp",
 		"bitset": "cpp"
 	},
-	"C_Cpp.default.includePath": ["/usr/include/node", "${workspaceFolder}/include", "${workspaceFolder}/node_modules/node-addon-api"]
+	"C_Cpp.default.includePath": ["/usr/include/node", "${workspaceFolder}/include", "${workspaceFolder}/node_modules/node-addon-api"],
+	"cmake.configureOnOpen": true
 }
