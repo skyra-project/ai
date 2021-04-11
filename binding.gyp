@@ -2,9 +2,6 @@
   "targets": [
     {
       "target_name": "skyra-ai",
-      "dependencies": [
-        "deps/binding.gyp:googletest"
-      ],
       "sources": [
         "src/games/TicTacToe.cc",
         "src/games/ConnectFour.cc",
