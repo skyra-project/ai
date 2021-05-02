@@ -5,8 +5,6 @@
 **Advanced Gaming AI for Skyra**
 
 [![GitHub](https://img.shields.io/github/license/skyra-project/ai)](https://github.com/skyra-project/ai/blob/main/LICENSE.md)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/skyra-project/ai.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/skyra-project/ai/alerts/)
-[![Language grade: JavaScript](https://img.shields.io/lgtm/grade/javascript/g/skyra-project/ai.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/skyra-project/ai/context:javascript)
 [![npm bundle size](https://img.shields.io/bundlephobia/min/@skyra/ai?logo=webpack&style=flat-square)](https://bundlephobia.com/result?p=@skyra/ai)
 [![npm](https://img.shields.io/npm/v/@skyra/ai?color=crimson&logo=npm&style=flat-square)](https://www.npmjs.com/package/@skyra/ai)
 [![Depfu](https://badges.depfu.com/badges/f2a0336739a79b30e513d177d6ac833a/count.svg)](https://depfu.com/github/skyra-project/ai?project_id=16079)
