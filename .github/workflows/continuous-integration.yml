@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node_version: [12, 14]
+        node: [12, 14, 16]
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
@@ -47,15 +47,15 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: 'recursive'
-      - name: Use Node.js ${{ matrix.node_version }}
+      - name: Use Node.js ${{ matrix.node }}
         uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node_version }}
+          node-version: ${{ matrix.node }}
       - name: Restore CI Cache
-        uses: actions/cache@v1
+        uses: actions/cache@v2.1.4
         with:
           path: node_modules
-          key: ${{ runner.os }}-${{ matrix.node_version }}-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
+          key: ${{ runner.os }}-${{ matrix.node }}-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
       - name: Install Dependencies
         run: yarn --frozen-lockfile
       - name: Compile Projects
@@ -70,7 +70,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node_version: [12, 14]
+        node: [12, 14, 16]
         os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
@@ -78,15 +78,15 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: 'recursive'
-      - name: Use Node.js ${{ matrix.node_version }}
+      - name: Use Node.js ${{ matrix.node }}
         uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node_version }}
+          node-version: ${{ matrix.node }}
       - name: Restore CI Cache
-        uses: actions/cache@v1
+        uses: actions/cache@v2.1.4
         with:
           path: node_modules
-          key: ${{ runner.os }}-${{ matrix.node_version }}-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
+          key: ${{ runner.os }}-${{ matrix.node }}-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.8
         with:
