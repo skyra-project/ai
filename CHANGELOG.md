@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/skyra-project/ai/compare/v1.1.1...v1.2.0) (2021-05-19)
+
+### Features
+
+-   add unit tests in C++ ([#26](https://github.com/skyra-project/ai/issues/26)) ([0fed8b5](https://github.com/skyra-project/ai/commit/0fed8b5d54373fd2458dfacb4d84712a2f30b2d1))
+
+### Bug Fixes
+
+-   mark package as side effect free ([268e170](https://github.com/skyra-project/ai/commit/268e1702d94c94c7c98111e173f706a7359e96dd))
+
 ### [1.1.1](https://github.com/skyra-project/ai/compare/v1.1.0...v1.1.1) (2021-03-02)
 
 ## [1.1.0](https://github.com/skyra-project/ai/compare/v1.0.2...v1.1.0) (2021-02-18)
