@@ -9,7 +9,7 @@
 	"types": "dist/main.d.ts",
 	"scripts": {
 		"test": "jest",
-		"clean": "rimraf build dist",
+		"clean": "node scripts/clean.mjs",
 		"build": "run-p build:node build:cpp",
 		"build:cpp": "run-s gyp**",
 		"build:node": "rollup -c rollup.config.ts",
