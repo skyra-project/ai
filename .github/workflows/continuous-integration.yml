@@ -35,18 +35,16 @@ jobs:
     if: "!contains(needs.pre_ci.outputs.commit_message, '[skip ci]')"
     needs: pre_ci
     runs-on: ${{ matrix.os }}
-
     strategy:
       fail-fast: false
       matrix:
         node: [12, 14, 16]
         os: [ubuntu-latest, windows-latest, macOS-latest]
-
     steps:
       - name: Checkout Project
         uses: actions/checkout@v2
         with:
-          submodules: 'recursive'
+          submodules: recursive
       - name: Use Node.js ${{ matrix.node }}
         uses: actions/setup-node@v2
         with:
@@ -66,18 +64,16 @@ jobs:
     if: "!contains(needs.pre_ci.outputs.commit_message, '[skip ci]')"
     needs: pre_ci
     runs-on: ${{ matrix.os }}
-
     strategy:
       fail-fast: false
       matrix:
         node: [12, 14, 16]
         os: [ubuntu-latest, windows-latest, macOS-latest]
-
     steps:
       - name: Checkout Project
         uses: actions/checkout@v2
         with:
-          submodules: 'recursive'
+          submodules: recursive
       - name: Use Node.js ${{ matrix.node }}
         uses: actions/setup-node@v2
         with:
