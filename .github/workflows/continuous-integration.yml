@@ -69,6 +69,7 @@ jobs:
       - name: Run tests
         run: yarn test
       - name: Run C++ Tests
+        shell: bash
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
             ./build-tests/Debug/skyra_ai_tests.exe
