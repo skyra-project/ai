@@ -30,13 +30,13 @@
 		"tslib": "^2.3.0"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.14.6",
-		"@babel/preset-env": "^7.14.7",
+		"@babel/core": "^7.14.8",
+		"@babel/preset-env": "^7.14.8",
 		"@babel/preset-typescript": "^7.14.5",
 		"@commitlint/cli": "^12.1.4",
 		"@commitlint/config-conventional": "^12.1.4",
 		"@sapphire/prettier-config": "^1.1.6",
-		"@sapphire/ts-config": "^2.3.1",
+		"@sapphire/ts-config": "^2.3.2",
 		"@types/bindings": "^1.5.1",
 		"@types/jest": "^26.0.24",
 		"@types/node": "^15.14.0",
