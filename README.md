@@ -7,7 +7,6 @@
 [![GitHub](https://img.shields.io/github/license/skyra-project/ai)](https://github.com/skyra-project/ai/blob/main/LICENSE.md)
 [![npm bundle size](https://img.shields.io/bundlephobia/min/@skyra/ai?logo=webpack&style=flat-square)](https://bundlephobia.com/result?p=@skyra/ai)
 [![npm](https://img.shields.io/npm/v/@skyra/ai?color=crimson&logo=npm&style=flat-square)](https://www.npmjs.com/package/@skyra/ai)
-[![Depfu](https://badges.depfu.com/badges/f2a0336739a79b30e513d177d6ac833a/count.svg)](https://depfu.com/github/skyra-project/ai?project_id=16079)
 
 </div>
 
