@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [12, 14, 16]
+        node: [14, 16]
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
       - name: Checkout Project
@@ -32,7 +32,7 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-${{ matrix.node }}-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
       - name: Install Dependencies
-        run: yarn --frozen-lockfile --ignore-engines
+        run: yarn --frozen-lockfile
       - name: Build Code
         run: yarn build
 
@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [12, 14, 16]
+        node: [14, 16]
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
       - name: Checkout Project
@@ -59,7 +59,7 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-${{ matrix.node }}-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
       - name: Install Dependencies
-        run: yarn --frozen-lockfile --ignore-engines
+        run: yarn --frozen-lockfile
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@73bc9c3f0240576f7135ed1f4c5aebbd55fb51f4 # renovate: tag=v1.11
         with:
