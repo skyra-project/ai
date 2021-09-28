@@ -13,7 +13,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [14, 16]
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
       - name: Checkout Project
@@ -22,19 +21,19 @@ jobs:
           submodules: recursive
       - name: Add problem matcher
         run: echo "::add-matcher::.github/problemMatchers/tsc.json"
-      - name: Use Node.js v${{ matrix.node }}
+      - name: Use Node.js v16
         uses: actions/setup-node@270253e841af726300e85d718a5f606959b2903c # renovate: tag=v2
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 16
       - name: Restore CI Cache
         uses: actions/cache@c64c572235d810460d0d6876e9c705ad5002b353 # renovate: tag=v2.1.6
         with:
           path: node_modules
-          key: ${{ runner.os }}-${{ matrix.node }}-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
+          key: ${{ runner.os }}-16-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
       - name: Install Dependencies
-        run: yarn --frozen-lockfile --ignore-engines
+        run: yarn --frozen-lockfile
       - name: Build Code
-        run: yarn build --ignore-engines
+        run: yarn build
 
   Testing:
     name: Unit Tests
@@ -42,24 +41,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node: [14, 16]
         os: [ubuntu-latest, windows-latest, macOS-latest]
     steps:
       - name: Checkout Project
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f # renovate: tag=v2
         with:
           submodules: recursive
-      - name: Use Node.js ${{ matrix.node }}
+      - name: Use Node.js 16
         uses: actions/setup-node@270253e841af726300e85d718a5f606959b2903c # renovate: tag=v2
         with:
-          node-version: ${{ matrix.node }}
+          node-version: 16
       - name: Restore CI Cache
         uses: actions/cache@c64c572235d810460d0d6876e9c705ad5002b353 # renovate: tag=v2.1.6
         with:
           path: node_modules
-          key: ${{ runner.os }}-${{ matrix.node }}-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
+          key: ${{ runner.os }}-16-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
       - name: Install Dependencies
-        run: yarn --frozen-lockfile --ignore-engines
+        run: yarn --frozen-lockfile
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@73bc9c3f0240576f7135ed1f4c5aebbd55fb51f4 # renovate: tag=v1.11
         with:
@@ -67,7 +65,7 @@ jobs:
       - name: Build C++ tests
         run: mkdir build-tests && cd build-tests && cmake .. && cmake --build . && cd ..
       - name: Run tests
-        run: yarn test --ignore-engines
+        run: yarn test
       - name: Run C++ Tests
         shell: bash
         run: |
