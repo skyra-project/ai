@@ -32,9 +32,9 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-${{ matrix.node }}-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
       - name: Install Dependencies
-        run: yarn --frozen-lockfile
+        run: yarn --frozen-lockfile --ignore-engines
       - name: Build Code
-        run: yarn build
+        run: yarn build --ignore-engines
 
   Testing:
     name: Unit Tests
@@ -59,7 +59,7 @@ jobs:
           path: node_modules
           key: ${{ runner.os }}-${{ matrix.node }}-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
       - name: Install Dependencies
-        run: yarn --frozen-lockfile
+        run: yarn --frozen-lockfile --ignore-engines
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@73bc9c3f0240576f7135ed1f4c5aebbd55fb51f4 # renovate: tag=v1.11
         with:
@@ -67,7 +67,7 @@ jobs:
       - name: Build C++ tests
         run: mkdir build-tests && cd build-tests && cmake .. && cmake --build . && cd ..
       - name: Run tests
-        run: yarn test
+        run: yarn test --ignore-engines
       - name: Run C++ Tests
         shell: bash
         run: |
