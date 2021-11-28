@@ -1596,20 +1596,20 @@
     estree-walker "^2.0.1"
     picomatch "^2.2.2"
 
-"@sapphire/prettier-config@^1.2.4":
-  version "1.2.4"
-  resolved "https://registry.yarnpkg.com/@sapphire/prettier-config/-/prettier-config-1.2.4.tgz#835c0d945d1d031cb999b034cf187f4c8972fba1"
-  integrity sha512-mH+2aQATewSlPl2NyRwFULTZIOOq9ilBSQ7uS7xlzVSKlGzCLzbGG8L3G+hDQ18xxN5oJdmkQmAOAunPd6J6gg==
+"@sapphire/prettier-config@^1.2.6":
+  version "1.2.6"
+  resolved "https://registry.yarnpkg.com/@sapphire/prettier-config/-/prettier-config-1.2.6.tgz#68dc7201bb31a8c274b0a9d48e754c4c237ef650"
+  integrity sha512-1+eRppdbmPWh1SqcHviCfqwQsZa1mxWltn3qfSyvy+TUfyF+0/5PEtNwn9qwh0hdQzz5N/feG45bdrqmbrdMww==
   dependencies:
-    prettier "^2.4.1"
+    prettier "^2.5.0"
 
-"@sapphire/ts-config@^3.1.4":
-  version "3.1.4"
-  resolved "https://registry.yarnpkg.com/@sapphire/ts-config/-/ts-config-3.1.4.tgz#36845b6a6cd1621bd0fcde0cee6273773c497939"
-  integrity sha512-WeQc7mhCzbu1sqnErhOVSgWFHTc2daybOjuSef/WtTXlPq1F6qn9y5hAYbNKD2ySQDe8GJJYwdWUZPTYv6fkBA==
+"@sapphire/ts-config@^3.1.6":
+  version "3.1.6"
+  resolved "https://registry.yarnpkg.com/@sapphire/ts-config/-/ts-config-3.1.6.tgz#9cd371f5eb17efaaf48fbf30abf7e7bd8b64c478"
+  integrity sha512-I41AqJLRXcJDW3tqFs7l93iOaJZ3Y0RgAZoawoanS+NfGPMZO04r03cDNEyTILxmtU8zcouyKpdzg+qiCP/5Dg==
   dependencies:
     tslib "^2.3.1"
-    typescript "^4.4.4"
+    typescript "^4.5.2"
 
 "@sinonjs/commons@^1.7.0":
   version "1.8.3"
@@ -4829,6 +4829,11 @@ prettier@^2.4.1:
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.4.1.tgz#671e11c89c14a4cfc876ce564106c4a6726c9f5c"
   integrity sha512-9fbDAXSBcc6Bs1mZrDYb3XKzDLm4EXXL9sC1LqKP5rZkT6KRr/rf9amVUcODVXgguK/isJz0d0hP72WeaKWsvA==
 
+prettier@^2.5.0:
+  version "2.5.0"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.5.0.tgz#a6370e2d4594e093270419d9cc47f7670488f893"
+  integrity sha512-FM/zAKgWTxj40rH03VxzIPdXmj39SwSjwG0heUcNFwI+EMZJnY93yAiKXM3dObIKAM5TA88werc8T/EwhB45eg==
+
 pretty-format@^27.0.0, pretty-format@^27.2.5:
   version "27.2.5"
   resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-27.2.5.tgz#7cfe2a8e8f01a5b5b29296a0b70f4140df0830c5"
@@ -5734,11 +5739,6 @@ typescript@^4.4.3:
   version "4.4.3"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.3.tgz#bdc5407caa2b109efd4f82fe130656f977a29324"
   integrity sha512-4xfscpisVgqqDfPaJo5vkd+Qd/ItkoagnHpufr+i2QCHBsNYp+G7UAoyFl8aPtx879u38wPV65rZ8qbGZijalA==
-
-typescript@^4.4.4:
-  version "4.4.4"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.4.tgz#2cd01a1a1f160704d3101fd5a58ff0f9fcb8030c"
-  integrity sha512-DqGhF5IKoBl8WNf8C1gu8q0xZSInh9j1kJJMqT3a94w1JzVaBU4EXOSMrz9yDqMT0xt3selp83fuFMQ0uzv6qA==
 
 typescript@^4.5.2:
   version "4.5.2"
