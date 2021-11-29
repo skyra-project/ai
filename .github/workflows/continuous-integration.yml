@@ -25,11 +25,7 @@ jobs:
         uses: actions/setup-node@270253e841af726300e85d718a5f606959b2903c # renovate: tag=v2
         with:
           node-version: 16
-      - name: Restore CI Cache
-        uses: actions/cache@937d24475381cd9c75ae6db12cb4e79714b926ed # renovate: tag=v2.1.7
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-16-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
+          cache: yarn
       - name: Install Dependencies
         run: yarn --frozen-lockfile
       - name: Build Code
@@ -51,13 +47,8 @@ jobs:
         uses: actions/setup-node@270253e841af726300e85d718a5f606959b2903c # renovate: tag=v2
         with:
           node-version: 16
-      - name: Restore CI Cache
-        uses: actions/cache@937d24475381cd9c75ae6db12cb4e79714b926ed # renovate: tag=v2.1.7
-        with:
-          path: node_modules
-          key: ${{ runner.os }}-16-${{ hashFiles(matrix.os == 'windows-latest' && '**\yarn.lock' || '**/yarn.lock') }}
+          cache: yarn
       - name: Install Dependencies
-        run: yarn --frozen-lockfile
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@73bc9c3f0240576f7135ed1f4c5aebbd55fb51f4 # renovate: tag=v1.11
         with:
