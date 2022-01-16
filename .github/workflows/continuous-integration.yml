@@ -50,7 +50,7 @@ jobs:
           cache: yarn
       - name: Install Dependencies
       - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@73bc9c3f0240576f7135ed1f4c5aebbd55fb51f4 # renovate: tag=v1.11
+        uses: jwlawson/actions-setup-cmake@884cf5c591490f86b788d68b6f585f26235578d6 # renovate: tag=v1.12
         with:
           cmake-version: '3.16.x'
       - name: Build C++ tests
