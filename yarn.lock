@@ -1721,17 +1721,17 @@
     estree-walker "^2.0.1"
     picomatch "^2.2.2"
 
-"@sapphire/prettier-config@^1.2.8":
-  version "1.2.8"
-  resolved "https://registry.yarnpkg.com/@sapphire/prettier-config/-/prettier-config-1.2.8.tgz#4ae89a325e11e850499dc7f053aa8d91178d33dc"
-  integrity sha512-V+yJcp4hG4PTHHkQ7UxXmOnjxEOfi+uAdQDPOF74HMPeo5jAXq5ni0fz2Y4L7oFYTFyyfNAP9Et7SCbjis4jpQ==
+"@sapphire/prettier-config@^1.2.9":
+  version "1.2.9"
+  resolved "https://registry.yarnpkg.com/@sapphire/prettier-config/-/prettier-config-1.2.9.tgz#69fe02b3502f67e62473e7dd5e5c2e644f8d07b7"
+  integrity sha512-GEaU2mcsRHpeKNQHCKtQqKqDton7vu+XderNvM+AvPx2bQFZTCQjlCXAZ2D1WSjmJSPIh6f7E5HTG2EufOclzQ==
   dependencies:
     prettier "^2.5.1"
 
-"@sapphire/ts-config@^3.1.7":
-  version "3.1.7"
-  resolved "https://registry.yarnpkg.com/@sapphire/ts-config/-/ts-config-3.1.7.tgz#e01082dbeb4d945be41f30cd9ad5b7fa96c5f88c"
-  integrity sha512-CqjxzHPkYUnvuj2FvNBe+Ms3tj3Ts0rF7t2pjxXR9khZqkcMc2XbKJj+ilqe+s+vfWrtKLvuyAPzb4Ay9tC1Jg==
+"@sapphire/ts-config@^3.1.8":
+  version "3.1.8"
+  resolved "https://registry.yarnpkg.com/@sapphire/ts-config/-/ts-config-3.1.8.tgz#83d57518db75a71f2a4b37dc499b97051b4ffd78"
+  integrity sha512-LAmX2/wlbG75FamaZbHsQL7XUMqgL4AYpYdBuboOScSsH3VpY4k3NrY5dgenzm02RF7XG5mTZ6Z0/dUtjCk51g==
   dependencies:
     tslib "^2.3.1"
     typescript "^4.5.4"
