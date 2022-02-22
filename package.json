@@ -11,15 +11,13 @@
 	"scripts": {
 		"test": "jest",
 		"clean": "node scripts/clean.mjs",
-		"build": "run-p build:node build:cpp",
-		"build:cpp": "run-s gyp**",
+		"build": "run-p \"build:node\" \"build:cpp\"",
+		"build:cpp": "run-s \"gyp**\"",
 		"build:node": "rollup -c rollup.config.ts",
 		"gypconfigure": "node-gyp configure",
 		"gypbuild": "node-gyp build",
 		"sversion": "standard-version",
-		"commit": "git-cz",
-		"cz": "git-cz",
-		"update": "yarn upgrade-interactive --latest",
+		"update": "yarn up \"@*/*\" -i && yarn up \"*\" -i",
 		"install": "node-gyp rebuild",
 		"prepublishOnly": "yarn build",
 		"prepare": "husky install .github/husky"
@@ -79,14 +77,6 @@
 		"node": ">=v14.18.0",
 		"npm": ">=7.24.2"
 	},
-	"resolutions": {
-		"chalk": "^4.1.2",
-		"jest-environment-jsdom": "https://registry.yarnpkg.com/@favware/skip-dependency/-/skip-dependency-1.1.3.tgz",
-		"jest-jasmine2": "https://registry.yarnpkg.com/@favware/skip-dependency/-/skip-dependency-1.1.3.tgz",
-		"kind-of": "^6.0.3",
-		"lodash": "^4.17.21",
-		"minimist": "^1.2.5"
-	},
 	"commitlint": {
 		"extends": [
 			"@commitlint/config-conventional"
@@ -101,5 +91,6 @@
 		"access": "public"
 	},
 	"gypfile": true,
-	"prettier": "@sapphire/prettier-config"
+	"prettier": "@sapphire/prettier-config",
+	"packageManager": "yarn@3.2.0"
 }
