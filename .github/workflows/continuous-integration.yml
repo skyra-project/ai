@@ -69,7 +69,7 @@ jobs:
       - name: Build C++ tests
         run: mkdir build-tests && cd build-tests && cmake .. && cmake --build . && cd ..
       - name: Run NodeJS tests
-        run: yarn test --coverage
+        run: yarn test
       - name: Run C++ Tests
         shell: bash
         run: |
@@ -78,30 +78,3 @@ jobs:
           else
             ./build-tests/skyra_ai_tests
           fi
-      - name: Store code coverage report
-        if: ${{ matrix.node == '16' && matrix.os == 'ubuntu-20.04' }}
-        uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535 # tag=v3
-        with:
-          name: node-${{ matrix.node }}-${{ matrix.os }}
-          path: coverage/
-
-  Upload_Coverage_Report:
-    name: Upload coverage report to codecov
-    needs: [Testing]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Project
-        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
-        with:
-          fetch-depth: 2
-      - name: Download Coverage report
-        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3
-        with:
-          name: node-16-ubuntu-20.04
-          path: coverage/
-      - name: Codecov Upload
-        uses: codecov/codecov-action@81cd2dc8148241f03f5839d295e000b8f761e378 # tag=v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          directory: coverage/
-          fail_ci_if_error: true
