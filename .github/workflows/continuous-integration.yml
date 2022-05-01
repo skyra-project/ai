@@ -8,12 +8,19 @@ on:
 
 jobs:
   Building:
-    name: Compile source code
+    name: Compile source code Node v${{ matrix.node }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        node: [12, 14, 15, 16, 17]
+        os: [ubuntu-18.04, ubuntu-20.04, macos-latest, windows-latest]
+        include:
+          - node: 18
+            os: ubuntu-20.04
+          - node: 18
+            os: macos-latest
+          - node: 18
+            os: windows-latest
     steps:
       - name: Checkout Project
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
@@ -21,42 +28,52 @@ jobs:
           submodules: recursive
       - name: Add problem matcher
         run: echo "::add-matcher::.github/problemMatchers/tsc.json"
-      - name: Use Node.js v16
+      - name: Use Node.js v${{ matrix.node }}
         uses: actions/setup-node@56337c425554a6be30cdef71bf441f15be286854 # tag=v3
         with:
-          node-version: 16
+          node-version: ${{ matrix.node }}
           cache: yarn
+          registry-url: https://registry.npmjs.org/
       - name: Install Dependencies
-        run: yarn --frozen-lockfile
+        run: yarn --immutable
       - name: Build Code
         run: yarn build
 
   Testing:
-    name: Unit Tests
+    name: Unit Tests Node v${{ matrix.node }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        node: [12, 14, 15, 16, 17]
+        os: [ubuntu-18.04, ubuntu-20.04, macos-latest, windows-latest]
+        include:
+          - node: 18
+            os: ubuntu-20.04
+          - node: 18
+            os: macos-latest
+          - node: 18
+            os: windows-latest
     steps:
       - name: Checkout Project
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
         with:
           submodules: recursive
-      - name: Use Node.js 16
+      - name: Use Node.js v${{ matrix.node }}
         uses: actions/setup-node@56337c425554a6be30cdef71bf441f15be286854 # tag=v3
         with:
-          node-version: 16
+          node-version: ${{ matrix.node }}
           cache: yarn
+          registry-url: https://registry.npmjs.org/
       - name: Install Dependencies
+        run: yarn --immutable
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@884cf5c591490f86b788d68b6f585f26235578d6 # renovate: tag=v1.12
         with:
           cmake-version: '3.16.x'
       - name: Build C++ tests
         run: mkdir build-tests && cd build-tests && cmake .. && cmake --build . && cd ..
-      - name: Run tests
-        run: yarn test
+      - name: Run NodeJS tests
+        run: yarn test --coverage
       - name: Run C++ Tests
         shell: bash
         run: |
@@ -65,3 +82,10 @@ jobs:
           else
             ./build-tests/skyra_ai_tests
           fi
+      - name: Store code coverage report
+        if: ${{ matrix.node == '16' && matrix.os == 'ubuntu-20.04' }}
+        uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535 # tag=v3
+        with:
+          name: node-${{ matrix.node }}-${{ matrix.os }}
+          path: coverage/
+
