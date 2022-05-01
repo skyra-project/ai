@@ -13,14 +13,12 @@ jobs:
     strategy:
       matrix:
         node: [12, 14, 15, 16, 17]
-        os: [ubuntu-18.04, ubuntu-20.04, macos-latest, windows-latest]
+        os: [ubuntu-18.04, ubuntu-20.04, macos-latest]
         include:
           - node: 18
             os: ubuntu-20.04
           - node: 18
             os: macos-latest
-          - node: 18
-            os: windows-latest
     steps:
       - name: Checkout Project
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
@@ -45,14 +43,12 @@ jobs:
     strategy:
       matrix:
         node: [12, 14, 15, 16, 17]
-        os: [ubuntu-18.04, ubuntu-20.04, macos-latest, windows-latest]
+        os: [ubuntu-18.04, ubuntu-20.04, macos-latest]
         include:
           - node: 18
             os: ubuntu-20.04
           - node: 18
             os: macos-latest
-          - node: 18
-            os: windows-latest
     steps:
       - name: Checkout Project
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
