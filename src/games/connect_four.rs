@@ -78,6 +78,9 @@ fn compare(a: Players, b: Players, c: Players, d: Players) -> bool {
 
 impl AiBoard {
 	unsafe fn check_4(self: &AiBoard, cell: usize, a: isize, b: isize, c: isize, d: isize) -> bool {
+		debug_assert!(cell as isize + a >= 0);
+		debug_assert!(cell as isize + d < BOARD_CELLS as isize);
+
 		let ptr = self.cells.as_ptr().add(cell);
 
 		let ca = *ptr.offset(a);
@@ -89,6 +92,9 @@ impl AiBoard {
 	}
 
 	unsafe fn check_5(self: &AiBoard, cell: usize, a: isize, b: isize, c: isize, d: isize, e: isize) -> bool {
+		debug_assert!(cell as isize + a >= 0);
+		debug_assert!(cell as isize + e < BOARD_CELLS as isize);
+
 		let ptr = self.cells.as_ptr().add(cell);
 
 		let ca = *ptr.offset(a);
@@ -102,6 +108,9 @@ impl AiBoard {
 
 	#[allow(clippy::too_many_arguments)]
 	unsafe fn check_6(self: &AiBoard, cell: usize, a: isize, b: isize, c: isize, d: isize, e: isize, f: isize) -> bool {
+		debug_assert!(cell as isize + a >= 0);
+		debug_assert!(cell as isize + f < BOARD_CELLS as isize);
+
 		let ptr = self.cells.as_ptr().add(cell);
 
 		let ca = *ptr.offset(a);
@@ -126,6 +135,9 @@ impl AiBoard {
 		f: isize,
 		g: isize,
 	) -> bool {
+		debug_assert!(cell as isize + a >= 0);
+		debug_assert!(cell as isize + g < BOARD_CELLS as isize);
+
 		let ptr = self.cells.as_ptr().add(cell);
 
 		let ca = *ptr.offset(a);
@@ -180,6 +192,8 @@ impl AiBoard {
 			return false;
 		}
 
+		debug_assert!(last_move < BOARD_WIDTH);
+
 		const I_BOARD_WIDTH: isize = BOARD_WIDTH as isize;
 
 		// Vertical
@@ -220,19 +234,29 @@ impl AiBoard {
 	}
 
 	fn column_available(self: &AiBoard, column: usize) -> bool {
+		debug_assert!(column < BOARD_WIDTH);
+
 		self.remaining[column] != 0
 	}
 
 	fn piece_offset(self: &AiBoard, column: usize) -> usize {
+		debug_assert!(column < BOARD_WIDTH);
+		debug_assert!(self.remaining[column] != 0);
+
 		((self.remaining[column] as usize - 1) * BOARD_WIDTH) + column
 	}
 
 	fn piece_add(self: &mut AiBoard, column: usize, offset: usize, player: Players) {
+		debug_assert!(column < BOARD_WIDTH);
+		debug_assert!(self.remaining[column] != 0);
+
 		self.remaining[column] -= 1;
 		self.cells[offset] = player;
 	}
 
 	fn piece_remove(self: &mut AiBoard, column: usize, offset: usize) {
+		debug_assert!(self.remaining[column] != BOARD_HEIGHT as u8);
+
 		self.remaining[column] += 1;
 		self.cells[offset] = Players::Unset;
 	}
@@ -370,4 +394,482 @@ impl AiBoard {
 		// Process the best move for the AI.
 		self.max(UNDEFINED_LAST_MOVE, cmp::min(remaining, maximum_depth), DEFAULT_ALPHA, DEFAULT_BETA).position
 	}
+}
+
+#[cfg(test)]
+mod tests {
+	use super::*;
+
+	#[test]
+	fn test_compare_same() {
+		assert!(compare(Players::Player, Players::Player, Players::Player, Players::Player));
+	}
+
+	macro_rules! compare_different {
+		($($name:ident: $value:expr,)*) => {
+		$(
+			#[test]
+			fn $name() {
+				let (a, b, c, d) = $value;
+				assert!(!compare(a, b, c, d));
+			}
+		)*
+		}
+	}
+
+	compare_different! {
+		test_compare_one_a_different: (Players::Machine, Players::Player, Players::Player, Players::Player),
+		test_compare_one_b_different: (Players::Player, Players::Machine, Players::Player, Players::Player),
+		test_compare_one_c_different: (Players::Player, Players::Player, Players::Machine, Players::Player),
+		test_compare_one_d_different: (Players::Player, Players::Player, Players::Player, Players::Machine),
+	}
+
+	macro_rules! create_cells {
+		() => ([Players::Unset; 42]);
+		($($index:expr $(, $tail:expr)*)*) => ($({
+			let mut tmp = create_cells!($($tail),*);
+			tmp[$index] = Players::Player;
+			tmp
+		})*);
+	}
+
+	mod new {
+		use super::*;
+
+		#[test]
+		fn test_empty() {
+			let cells = create_cells!();
+			let remaining: AiRemaining = [6; 7];
+			let board = AiBoard::new(cells);
+
+			assert_eq!(board.cells, cells);
+			assert_eq!(board.remaining, remaining);
+		}
+
+		#[test]
+		fn test_row_filled() {
+			let cells = create_cells!(35, 36, 37, 38, 39, 40, 41);
+			println!("{:?}", cells);
+			let remaining: AiRemaining = [5; 7];
+			let board = AiBoard::new(cells);
+
+			assert_eq!(board.cells, cells);
+			assert_eq!(board.remaining, remaining);
+		}
+
+		#[test]
+		fn test_column_filled() {
+			let cells = create_cells!(0, 7, 14, 21, 28, 35);
+			let remaining: AiRemaining = [0, 6, 6, 6, 6, 6, 6];
+			let board = AiBoard::new(cells);
+
+			assert_eq!(board.cells, cells);
+			assert_eq!(board.remaining, remaining);
+		}
+	}
+
+	mod check_4 {
+		use super::super::*;
+
+		macro_rules! test_panic {
+			($($name:ident: [$cells:expr, $last_column:expr, $offsets:expr],)*) => {
+			$(
+				#[test]
+				#[should_panic]
+				fn $name() {
+					let board = AiBoard::new($cells);
+
+					unsafe {
+						board.check_4($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3);
+					}
+				}
+			)*
+			};
+		}
+
+		test_panic! {
+			test_out_of_range_under: [create_cells!(0, 2, 3, 4), 0, (-1, 0, 1, 2)],
+			test_out_of_range_over: [create_cells!(38, 39, 40, 41), 39, (0, 1, 2, 3)],
+		}
+
+		#[test]
+		fn test_fails() {
+			let board = AiBoard::new(create_cells!(0, 2, 3, 4));
+
+			unsafe {
+				assert!(!board.check_4(0, 0, 1, 2, 3));
+			}
+		}
+
+		macro_rules! test_true {
+			($($name:ident: [$last_column:expr, $offsets:expr],)*) => {
+			$(
+				#[test]
+				fn $name() {
+					let board = AiBoard::new(create_cells!(0, 1, 2, 3, 4));
+
+					unsafe {
+						assert!(board.check_4($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3));
+					}
+				}
+			)*
+			};
+		}
+
+		test_true! {
+			test_match_offset_0: [0, (0, 1, 2, 3)],
+			test_match_offset_1: [1, (-1, 0, 1, 2)],
+			test_match_offset_2: [2, (-2, -1, 0, 1)],
+			test_match_offset_3: [3, (-3, -2, -1, 0)],
+		}
+	}
+
+	mod check_5 {
+		use super::super::*;
+
+		macro_rules! test_panic {
+			($($name:ident: [$cells:expr, $last_column:expr, $offsets:expr],)*) => {
+			$(
+				#[test]
+				#[should_panic]
+				fn $name() {
+					let board = AiBoard::new($cells);
+
+					unsafe {
+						board.check_5($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4);
+					}
+				}
+			)*
+			};
+		}
+
+		test_panic! {
+			test_out_of_range_under: [create_cells!(0, 2, 3, 4), 0, (-1, 0, 1, 2, 3)],
+			test_out_of_range_over: [create_cells!(38, 39, 40, 41), 39, (-1, 0, 1, 2, 3)],
+		}
+
+		#[test]
+		fn test_fails() {
+			let board = AiBoard::new(create_cells!(0, 2, 3, 4));
+
+			unsafe {
+				assert!(!board.check_5(1, -1, 0, 1, 2, 3));
+			}
+		}
+
+		macro_rules! test_true {
+			($($name:ident: [$last_column:expr, $offsets:expr],)*) => {
+			$(
+				#[test]
+				fn $name() {
+					let board = AiBoard::new(create_cells!(0, 1, 2, 3));
+
+					unsafe {
+						assert!(board.check_5($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4));
+					}
+				}
+			)*
+			}
+		}
+
+		test_true! {
+			// test_match_offset_0 is omitted because horizontal offset would go beyond [0, 3]
+			test_match_offset_1: [1, (-1, 0, 1, 2, 3)],
+			test_match_offset_2: [2, (-2, -1, 0, 1, 2)],
+			test_match_offset_3: [3, (-3, -2, -1, 0, 1)],
+		}
+	}
+
+	mod check_6 {
+		use super::super::*;
+
+		macro_rules! test_panic {
+			($($name:ident: [$cells:expr, $last_column:expr, $offsets:expr],)*) => {
+			$(
+				#[test]
+				#[should_panic]
+				fn $name() {
+					let board = AiBoard::new($cells);
+
+					unsafe {
+						board.check_6($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4, $offsets.5);
+					}
+				}
+			)*
+			};
+		}
+
+		test_panic! {
+			test_out_of_range_under: [create_cells!(0, 2, 3, 4), 0, (-2, -1, 0, 1, 2, 3)],
+			test_out_of_range_over: [create_cells!(38, 39, 40, 41), 39, (-2, -1, 0, 1, 2, 3)],
+		}
+
+		#[test]
+		fn test_fails() {
+			let board = AiBoard::new(create_cells!(0, 2, 3, 4));
+
+			unsafe {
+				assert!(!board.check_6(2, -2, -1, 0, 1, 2, 3));
+			}
+		}
+
+		macro_rules! test_true {
+			($($name:ident: [$last_column:expr, $offsets:expr],)*) => {
+			$(
+				#[test]
+				fn $name() {
+					let board = AiBoard::new(create_cells!(0, 1, 2, 3, 4));
+
+					unsafe {
+						assert!(board.check_6($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4, $offsets.5));
+					}
+				}
+			)*
+			}
+		}
+
+		test_true! {
+			// test_match_offset_0-1 is omitted because horizontal offset would go beyond [0, 3]
+			test_match_offset_2: [2, (-2, -1, 0, 1, 2, 3)],
+			test_match_offset_3: [3, (-3, -2, -1, 0, 1, 2)],
+			test_match_offset_4: [4, (-3, -2, -1, 0, 1, 2)],
+		}
+	}
+
+	mod check_7 {
+		use super::super::*;
+
+		macro_rules! test_panic {
+			($($name:ident: [$cells:expr, $cell:expr],)*) => {
+			$(
+				#[test]
+				#[should_panic]
+				fn $name() {
+					let board = AiBoard::new($cells);
+
+					unsafe {
+						board.check_7($cell, -3, -2, -1, 0, 1, 2, 3);
+					}
+				}
+			)*
+			};
+		}
+
+		test_panic! {
+			test_out_of_range_under: [create_cells!(0, 2, 3, 4), 0],
+			test_out_of_range_over: [create_cells!(38, 39, 40, 41), 39],
+		}
+
+		#[test]
+		fn test_fails() {
+			let board = AiBoard::new(create_cells!(0, 2, 3, 4));
+
+			unsafe {
+				assert!(!board.check_7(3, -3, -2, -1, 0, 1, 2, 3));
+			}
+		}
+
+		macro_rules! test_true {
+			($($name:ident: [$last_column:expr],)*) => {
+			$(
+				#[test]
+				fn $name() {
+					let board = AiBoard::new(create_cells!(0, 1, 2, 3, 4));
+
+					unsafe {
+						assert!(board.check_7($last_column, -3, -2, -1, 0, 1, 2, 3));
+					}
+				}
+			)*
+			}
+		}
+
+		test_true! {
+			// The only horizontal row with 3 cells in each side is the middle, 3
+			test_match_offset_3: [3],
+		}
+	}
+
+	mod status {
+		use super::super::*;
+
+		// TODO: Negative assertions
+
+		macro_rules! test_status {
+			($($name:ident: [$cells:expr, $last_column:expr],)*) => {
+			$(
+				#[test]
+				fn $name() {
+					let board = AiBoard::new($cells);
+
+					unsafe {
+						assert!(board.status($last_column));
+					}
+				}
+			)*
+			}
+		}
+
+		test_status! {
+			test_status_horizontal_offset_0: [create_cells!(0, 1, 2, 3), 0],
+			test_status_horizontal_offset_1: [create_cells!(0, 1, 2, 3), 1],
+			test_status_horizontal_offset_2: [create_cells!(0, 1, 2, 3), 2],
+			test_status_horizontal_offset_3: [create_cells!(0, 1, 2, 3), 3],
+			test_status_vertical_offset_0: [create_cells!(0, 7, 14, 21), 0],
+			test_status_vertical_offset_1: [create_cells!(7, 14, 21, 28), 0],
+			test_status_vertical_offset_2: [create_cells!(14, 21, 28, 35), 0],
+			test_status_vertical_offset_3: [create_cells!(35, 36, 37, 40), 0],
+			test_status_tl_br_offset_0: [create_cells!(0, 8, 16, 24), 0],
+			test_status_tl_br_offset_1: [create_cells!(0, 8, 16, 24), 1],
+			test_status_tl_br_offset_2: [create_cells!(0, 8, 16, 24), 2],
+			test_status_tl_br_offset_3: [create_cells!(0, 8, 16, 24), 3],
+			test_status_bl_tr_offset_0: [create_cells!(21, 15, 9, 3), 0],
+			test_status_bl_tr_offset_1: [create_cells!(21, 15, 9, 3), 1],
+			test_status_bl_tr_offset_2: [create_cells!(21, 15, 9, 3), 2],
+			test_status_bl_tr_offset_3: [create_cells!(21, 15, 9, 3), 3],
+		}
+	}
+
+	mod column_available {
+		use super::super::*;
+
+		// TODO: Panic assertions
+
+		#[test]
+		fn test_0() {
+			let board = AiBoard::new(create_cells!(0, 7, 14, 21, 28, 35));
+			assert!(!board.column_available(0));
+		}
+
+		macro_rules! test_true {
+			($($name:ident: $cells:expr,)*) => {
+			$(
+				#[test]
+				fn $name() {
+					let board = AiBoard::new($cells);
+					assert!(board.column_available(0));
+				}
+			)*
+			}
+		}
+
+		test_true! {
+			test_1: create_cells!(7, 14, 21, 28, 35),
+			test_2: create_cells!(14, 21, 28, 35),
+			test_3: create_cells!(21, 28, 35),
+			test_4: create_cells!(28, 35),
+			test_5: create_cells!(35),
+			test_6: create_cells!(),
+		}
+	}
+
+	mod piece_offset {
+		use super::super::*;
+
+		// TODO: Panic assertions
+
+		#[test]
+		#[should_panic]
+		fn test_0() {
+			let board = AiBoard::new(create_cells!(0, 7, 14, 21, 28, 35));
+			board.piece_offset(0);
+		}
+
+		macro_rules! generate_test {
+			($($name:ident: [$cells:expr, $offset:expr],)*) => {
+			$(
+				#[test]
+				fn $name() {
+					let board = AiBoard::new($cells);
+					assert_eq!(board.piece_offset(0), $offset);
+				}
+			)*
+			}
+		}
+
+		generate_test! {
+			// test_0: omitted because out-of-range
+			test_1: [create_cells!(7, 14, 21, 28, 35), 0],
+			test_2: [create_cells!(14, 21, 28, 35), 7],
+			test_3: [create_cells!(21, 28, 35), 14],
+			test_4: [create_cells!(28, 35), 21],
+			test_5: [create_cells!(35), 28],
+			test_6: [create_cells!(), 35],
+		}
+	}
+
+	mod piece_add {
+		use super::super::*;
+
+		// TODO: Panic assertions
+
+		#[test]
+		#[should_panic]
+		fn test_0() {
+			let mut board = AiBoard::new(create_cells!(0, 7, 14, 21, 28, 35));
+			board.piece_add(0, 0, Players::Player);
+		}
+
+		macro_rules! generate_test {
+			($($name:ident: [$cells:expr, $offset:expr],)*) => {
+			$(
+				#[test]
+				fn $name() {
+					let mut board = AiBoard::new($cells);
+					board.piece_add(0, $offset, Players::Player);
+
+					assert_eq!(board.cells[$offset], Players::Player);
+				}
+			)*
+			}
+		}
+
+		generate_test! {
+			test_1: [create_cells!(7, 14, 21, 28, 35), 0],
+			test_2: [create_cells!(14, 21, 28, 35), 7],
+			test_3: [create_cells!(21, 28, 35), 14],
+			test_4: [create_cells!(28, 35), 21],
+			test_5: [create_cells!(35), 28],
+			test_6: [create_cells!(), 35],
+		}
+	}
+
+	mod piece_remove {
+		use super::super::*;
+
+		// TODO: Panic assertions
+
+		#[test]
+		#[should_panic]
+		fn test_6() {
+			let mut board = AiBoard::new(create_cells!());
+			board.piece_remove(0, 35);
+		}
+
+		macro_rules! generate_test {
+			($($name:ident: [$cells:expr, $offset:expr],)*) => {
+			$(
+				#[test]
+				fn $name() {
+					let mut board = AiBoard::new($cells);
+					board.piece_remove(0, $offset);
+
+					assert_eq!(board.cells[$offset], Players::Unset);
+				}
+			)*
+			}
+		}
+
+		generate_test! {
+			test_0: [create_cells!(0, 7, 14, 21, 28, 35), 0],
+			test_1: [create_cells!(7, 14, 21, 28, 35), 7],
+			test_2: [create_cells!(14, 21, 28, 35), 14],
+			test_3: [create_cells!(21, 28, 35), 21],
+			test_4: [create_cells!(28, 35), 28],
+			test_5: [create_cells!(35), 35],
+		}
+	}
+
+	// TODO: min assertions
+	// TODO: max assertions
 }

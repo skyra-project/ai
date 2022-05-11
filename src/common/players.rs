@@ -1,4 +1,4 @@
-#[derive(PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq, Copy, Clone)]
 pub enum Players {
 	Unset,
 	Player,
@@ -18,4 +18,4 @@ impl TryFrom<u8> for Players {
 	}
 }
 
-pub const INVALID_INDEX: usize = i64::MAX as usize;
+pub const INVALID_INDEX: usize = 255;
