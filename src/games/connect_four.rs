@@ -45,6 +45,7 @@ const AVAILABLE_DIAGONAL_BL: [u8; BOARD_CELLS] = [
 	0b0011, 0b0011, 0b0011, 0b0011, 0b0010, 0b0001, 0b0000,
 ];
 
+#[inline(always)]
 fn compare(a: Players, b: Players, c: Players, d: Players) -> bool {
 	a == b && b == c && c == d
 }
@@ -61,12 +62,12 @@ impl AiBoard {
 	pub fn new(cells: AiCells) -> Self {
 		let mut remaining = [0; BOARD_WIDTH];
 		for x in 0..BOARD_WIDTH {
-			let mut y: u8 = 0;
-			while y < BOARD_HEIGHT as u8 && cells[y as usize * BOARD_WIDTH + x] == Players::Unset {
+			let mut y = 0;
+			while y < BOARD_HEIGHT && cells[y * BOARD_WIDTH + x] == Players::Unset {
 				y += 1;
 			}
 
-			remaining[x] = y;
+			remaining[x] = y as u8;
 		}
 
 		Self { cells, remaining }

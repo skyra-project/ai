@@ -11,7 +11,8 @@ pub const BOARD_CELLS: usize = BOARD_WIDTH * BOARD_HEIGHT;
 
 pub type AiBoard = [Players; BOARD_CELLS];
 
-fn equals(a: Players, b: Players, c: Players) -> bool {
+#[inline(always)]
+fn compare(a: Players, b: Players, c: Players) -> bool {
 	a == b && b == c
 }
 
@@ -23,7 +24,7 @@ fn status(board: &AiBoard) -> Players {
 			continue;
 		}
 
-		if equals(a, board[i + 1], board[i + 2]) {
+		if compare(a, board[i + 1], board[i + 2]) {
 			return a;
 		}
 	}
@@ -35,7 +36,7 @@ fn status(board: &AiBoard) -> Players {
 			continue;
 		}
 
-		if equals(a, board[i + 3], board[i + 6]) {
+		if compare(a, board[i + 3], board[i + 6]) {
 			return a;
 		}
 	}
@@ -43,9 +44,9 @@ fn status(board: &AiBoard) -> Players {
 	let middle = board[4];
 	if middle == Players::Unset
 		// Check descending diagonal
-		|| equals(board[0], middle, board[8])
+		|| compare(board[0], middle, board[8])
 		// Check ascending diagonal
-		|| equals(board[6], middle, board[2])
+		|| compare(board[6], middle, board[2])
 	{
 		middle
 	} else {
