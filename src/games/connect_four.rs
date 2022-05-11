@@ -1,4 +1,4 @@
-use crate::common::players::{Players, INVALID_INDEX};
+use crate::{Players, U_INVALID_INDEX};
 use std::cmp;
 
 pub const BOARD_WIDTH: usize = 7;
@@ -367,14 +367,14 @@ impl AiBoard {
 
 	fn max_top(self: &mut AiBoard, remaining: u8) -> usize {
 		if remaining == 0 {
-			return INVALID_INDEX;
+			return U_INVALID_INDEX;
 		}
 
 		const DEFAULT_ALPHA: i8 = i8::MIN;
 		const DEFAULT_BETA: i8 = i8::MAX;
 
 		let mut max_v = i8::MIN;
-		let mut column = INVALID_INDEX;
+		let mut column = U_INVALID_INDEX;
 		for c in 0..BOARD_WIDTH {
 			if !self.column_available(c) {
 				continue;

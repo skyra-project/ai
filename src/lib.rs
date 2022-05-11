@@ -3,16 +3,36 @@
 #[macro_use]
 extern crate napi_derive;
 
-mod common;
 mod games;
 
-use common::players::Players;
 use games::{connect_four, tic_tac_toe};
 use napi::bindgen_prelude::Uint8Array;
 use napi::Error;
 
+#[derive(Debug, PartialEq, Copy, Clone)]
+pub enum Players {
+	Unset,
+	Player,
+	Machine,
+}
+
+impl TryFrom<u8> for Players {
+	type Error = &'static str;
+
+	fn try_from(value: u8) -> Result<Self, Self::Error> {
+		match value {
+			0 => Ok(Players::Unset),
+			1 => Ok(Players::Player),
+			2 => Ok(Players::Machine),
+			_ => Err("Players only accepts 0, 1, or 2!"),
+		}
+	}
+}
+
+pub const U_INVALID_INDEX: usize = 255;
+
 #[napi]
-pub const INVALID_INDEX: i64 = common::players::INVALID_INDEX as i64;
+pub const INVALID_INDEX: i64 = U_INVALID_INDEX as i64;
 
 #[napi(js_name = "connectFour")]
 pub fn connect_four_handler(v: Uint8Array, maximum_depth: Option<u32>) -> Result<i64, Error> {

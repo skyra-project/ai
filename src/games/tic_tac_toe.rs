@@ -1,4 +1,4 @@
-use crate::common::players::{Players, INVALID_INDEX};
+use crate::{Players, U_INVALID_INDEX};
 
 struct AiResults {
 	pub points: i8,
@@ -57,15 +57,15 @@ fn status(board: &AiBoard) -> Players {
 fn min(board: &mut AiBoard, remaining: u8, alpha: i8, beta: i8) -> AiResults {
 	let winner = status(board);
 	if winner == Players::Player {
-		return AiResults { points: -1, position: INVALID_INDEX };
+		return AiResults { points: -1, position: U_INVALID_INDEX };
 	}
 
 	if winner == Players::Machine {
-		return AiResults { points: 1, position: INVALID_INDEX };
+		return AiResults { points: 1, position: U_INVALID_INDEX };
 	}
 
 	if remaining == 0 {
-		return AiResults { points: 0, position: INVALID_INDEX };
+		return AiResults { points: 0, position: U_INVALID_INDEX };
 	}
 
 	// Possible values for minv are:
@@ -75,7 +75,7 @@ fn min(board: &mut AiBoard, remaining: u8, alpha: i8, beta: i8) -> AiResults {
 	//
 	// We're initially setting it to 2 as worse than the worst case:
 	let mut min_v: i8 = 2;
-	let mut position: usize = INVALID_INDEX;
+	let mut position: usize = U_INVALID_INDEX;
 	let mut local_beta = beta;
 
 	for i in 0..BOARD_CELLS {
@@ -114,15 +114,15 @@ fn min(board: &mut AiBoard, remaining: u8, alpha: i8, beta: i8) -> AiResults {
 fn max(board: &mut AiBoard, remaining: u8, alpha: i8, beta: i8) -> AiResults {
 	let winner = status(board);
 	if winner == Players::Player {
-		return AiResults { points: -1, position: INVALID_INDEX };
+		return AiResults { points: -1, position: U_INVALID_INDEX };
 	}
 
 	if winner == Players::Machine {
-		return AiResults { points: 1, position: INVALID_INDEX };
+		return AiResults { points: 1, position: U_INVALID_INDEX };
 	}
 
 	if remaining == 0 {
-		return AiResults { points: 0, position: INVALID_INDEX };
+		return AiResults { points: 0, position: U_INVALID_INDEX };
 	}
 
 	// Possible values for maxv are:
@@ -132,7 +132,7 @@ fn max(board: &mut AiBoard, remaining: u8, alpha: i8, beta: i8) -> AiResults {
 	//
 	// We're initially setting it to -2 as worse than the worst case:
 	let mut max_v: i8 = -2;
-	let mut position: usize = INVALID_INDEX;
+	let mut position: usize = U_INVALID_INDEX;
 	let mut local_alpha = alpha;
 
 	for i in 0..BOARD_CELLS {
