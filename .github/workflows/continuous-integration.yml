@@ -1,9 +1,19 @@
 name: Continuous Integration
 
+env:
+  DEBUG: napi:*
+  APP_NAME: ai
+  MACOSX_DEPLOYMENT_TARGET: '10.13'
+
 on:
   push:
     branches:
       - main
+    paths-ignore:
+      - '**/*.md'
+      - LICENSE
+      - '**/*.gitignore'
+      - .editorconfig
   pull_request:
 
 concurrency:
@@ -11,88 +21,221 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_test:
-    name: Build and Test Node v${{ matrix.node }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 10
+  build:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11, macos-12, macos-13, ubuntu-20.04, ubuntu-22.04]
-        node: [16, 18, 19, 20]
+        settings:
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            build: yarn build
+          - os: windows-latest
+            build: yarn build
+            target: x86_64-pc-windows-msvc
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
+            build: |-
+              set -e &&
+              yarn build --target x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
+            build: set -e && yarn build
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            build: |
+              sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
+              export CC=$(xcrun -f clang);
+              export CXX=$(xcrun -f clang++);
+              SYSROOT=$(xcrun --sdk macosx --show-sdk-path);
+              export CFLAGS="-isysroot $SYSROOT -isystem $SYSROOT";
+              yarn build --target aarch64-apple-darwin
+    name: stable - ${{ matrix.settings.target }} - node@16
+    runs-on: ${{ matrix.settings.os }}
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
-
-      - name: Add problem matcher
-        run: echo "::add-matcher::.github/problemMatchers/tsc.json"
-
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+      - name: Use Node.js v16
+        uses: actions/setup-node@56337c425554a6be30cdef71bf441f15be286854 # tag=v3
+        if: ${{ !matrix.settings.docker }}
       - name: Use Node.js v${{ matrix.node }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
           cache: yarn
-          registry-url: https://registry.yarnpkg.org/
-
-      - name: Install Dependencies
-        run: yarn --immutable
-
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v1.13
+      - name: Use Rust Toolchain
+        uses: actions-rs/toolchain@88dc2356392166efad76775c878094f4e83ff746 #tag=v1
+        if: ${{ !matrix.settings.docker }}
         with:
-          cmake-version: '3.16.x'
-
-      - name: Build C++ tests
-        run: mkdir build-tests && cd build-tests && cmake .. && cmake --build . && cd ..
-
-      - name: Build Code
-        run: yarn build
-
-      - name: Run NodeJS tests
-        run: yarn test
-
-      - name: Run C++ Tests
+          profile: minimal
+          override: true
+          toolchain: stable
+          target: ${{ matrix.settings.target }}
+      - name: Use Node.js v${{ matrix.node }}
+        uses: actions/setup-node@17f8bd926464a1afa4c6a11669539e9c1ba77048 # tag=v3
+        with:
+          path: |
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            .cargo-cache/registry/index/
+            .cargo-cache/registry/cache/
+            .cargo-cache/git/db/
+            target/
+          key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.os }}
+      - name: Setup toolchain
+        run: ${{ matrix.settings.setup }}
+        if: ${{ matrix.settings.setup }}
         shell: bash
-        run: ./build-tests/skyra_ai_tests
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Build in docker
+        uses: addnab/docker-run-action@v3 #tag=v3
+        if: ${{ matrix.settings.docker }}
+        with:
+          image: ${{ matrix.settings.docker }}
+          options: '--user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/root/.cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/root/.cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/root/.cargo/registry/index -v ${{ github.workspace }}:/build -w /build'
+          run: ${{ matrix.settings.build }}
+      - name: Build
+        run: ${{ matrix.settings.build }}
+        if: ${{ !matrix.settings.docker }}
+        shell: bash
+      - name: Upload artifact
+        uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535 #tag=v3
+        with:
+          name: bindings-${{ matrix.settings.target }}
+          path: ${{ env.APP_NAME }}.*.node
+          if-no-files-found: error
 
-  build_test_musl_x86_64:
-    name: Build and Test x86_64(musl)
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    container:
-      image: node:${{ matrix.node }}-alpine
+  test-macOS-windows-binding:
+    name: Test bindings on ${{ matrix.settings.target }} - node@${{ matrix.node }}
+    needs: build
     strategy:
       fail-fast: false
       matrix:
-        node: [16, 18, 19, 20]
+        settings:
+          - os: macos-latest
+            target: 'x86_64-apple-darwin'
+          - os: windows-latest
+            target: 'x86_64-pc-windows-msvc'
+        node: [16, 18]
+    runs-on: ${{ matrix.settings.os }}
     steps:
-      - name: Setup env with Node v${{ matrix.node }}
-        run: |
-          apk add --update
-          apk add --no-cache ca-certificates git curl build-base python3 g++ make cmake bash
-
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout Project
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+      - name: Use Node.js v${{ matrix.node }}
+        uses: actions/setup-node@56337c425554a6be30cdef71bf441f15be286854 # tag=v3
         with:
-          submodules: recursive
-
-      - name: Add problem matcher
-        run: echo "::add-matcher::.github/problemMatchers/tsc.json"
-
+          node-version: ${{ matrix.node }}
+          cache: yarn
       - name: Install dependencies
-        run: yarn --immutable
-
-      - name: Build C++ tests
-        run: mkdir build-tests && cd build-tests && cmake .. && cmake --build . && cd ..
-
-      - name: Build Code
-        run: yarn build
-
-      - name: Run NodeJS tests
-        run: yarn test
-
-      - name: Run C++ Tests
+        run: yarn install --immutable
+      - name: Download artifacts
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 #tag=v3
+        with:
+          name: bindings-${{ matrix.settings.target }}
+          path: .
+      - name: List packages
+        run: ls -R .
         shell: bash
-        run: ./build-tests/skyra_ai_tests
+      - name: Test bindings
+        run: yarn test:node
+
+  test-linux-x64-gnu-binding:
+    name: Test bindings on Linux-x64-gnu - node@${{ matrix.node }}
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [16, 18]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+      - name: Use Node.js v${{ matrix.node }}
+        uses: actions/setup-node@56337c425554a6be30cdef71bf441f15be286854 # tag=v3
+        with:
+          node-version: ${{ matrix.node }}
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Download artifacts
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 #tag=v3
+        with:
+          name: bindings-x86_64-unknown-linux-gnu
+          path: .
+      - name: List packages
+        run: ls -R .
+        shell: bash
+      - name: Test bindings
+        run: docker run --rm -v $(pwd):/build -w /build node:${{ matrix.node }}-slim yarn test:node
+
+  test-linux-x64-musl-binding:
+    name: Test bindings on x86_64-unknown-linux-musl - node@${{ matrix.node }}
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [16, 18]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+      - name: Use Node.js v${{ matrix.node }}
+        uses: actions/setup-node@56337c425554a6be30cdef71bf441f15be286854 # tag=v3
+        with:
+          node-version: ${{ matrix.node }}
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Download artifacts
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 #tag=v3
+        with:
+          name: bindings-x86_64-unknown-linux-musl
+          path: .
+      - name: List packages
+        run: ls -R .
+        shell: bash
+      - name: Test bindings
+        run: docker run --rm -v $(pwd):/build -w /build node:${{ matrix.node }}-alpine yarn test:node
+
+  publish:
+    name: Publish
+    runs-on: ubuntu-latest
+    needs: [test-macOS-windows-binding, test-linux-x64-gnu-binding, test-linux-x64-musl-binding]
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
+      - name: Use Node.js v16
+        uses: actions/setup-node@56337c425554a6be30cdef71bf441f15be286854 # tag=v3
+        with:
+          node-version: 16
+          cache: yarn
+      - name: Install dependencies
+        run: yarn install --immutable
+      - name: Download all artifacts
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3
+        with:
+          path: artifacts
+      - name: Move artifacts
+        run: yarn artifacts
+      - name: List packages
+        run: ls -R ./npm
+        shell: bash
+      - name: Publish
+        run: |
+          if git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+$";
+          then
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+            npm publish --access public
+          elif git log -1 --pretty=%B | grep "^[0-9]\+\.[0-9]\+\.[0-9]\+";
+          then
+            echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" >> ~/.npmrc
+            npm publish --tag next --access public
+          else
+            echo "Not a release, skipping publish"
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
