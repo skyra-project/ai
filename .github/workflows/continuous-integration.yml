@@ -66,7 +66,7 @@ jobs:
           node-version: 16
           cache: yarn
           architecture: ${{ matrix.settings.architecture }}
-      - name: Install
+      - name: Use Rust Toolchain
         uses: actions-rs/toolchain@88dc2356392166efad76775c878094f4e83ff746 #tag=v1
         if: ${{ !matrix.settings.docker }}
         with:
@@ -93,7 +93,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build in docker
-        uses: addnab/docker-run-action@3e77f186b7a929ef010f183a9e24c0f9955ea609 #tag=v3
+        uses: addnab/docker-run-action@v3 #tag=v3
         if: ${{ matrix.settings.docker }}
         with:
           image: ${{ matrix.settings.docker }}
