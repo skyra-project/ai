@@ -111,13 +111,18 @@ jobs:
           if-no-files-found: error
 
   test-macOS-windows-binding:
-    name: Test bindings on Windows-x64-msvc - node@${{ matrix.node }}
+    name: Test bindings on ${{ matrix.settings.target }} - node@${{ matrix.node }}
     needs: build
     strategy:
       fail-fast: false
       matrix:
+        settings:
+          - os: macos-latest
+            target: 'x86_64-apple-darwin'
+          - os: windows-latest
+            target: 'x86_64-pc-windows-msvc'
         node: [16, 18]
-    runs-on: windows-latest
+    runs-on: ${{ matrix.settings.os }}
     steps:
       - name: Checkout Project
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
@@ -131,13 +136,13 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 #tag=v3
         with:
-          name: bindings-x86_64-pc-windows-msvc
+          name: bindings-${{ matrix.settings.target }}
           path: .
       - name: List packages
         run: ls -R .
         shell: bash
       - name: Test bindings
-        run: yarn test
+        run: yarn test:node
 
   test-linux-x64-gnu-binding:
     name: Test bindings on Linux-x64-gnu - node@${{ matrix.node }}
@@ -166,7 +171,7 @@ jobs:
         run: ls -R .
         shell: bash
       - name: Test bindings
-        run: docker run --rm -v $(pwd):/build -w /build node:${{ matrix.node }}-slim yarn test
+        run: docker run --rm -v $(pwd):/build -w /build node:${{ matrix.node }}-slim yarn test:node
 
   test-linux-x64-musl-binding:
     name: Test bindings on x86_64-unknown-linux-musl - node@${{ matrix.node }}
@@ -195,7 +200,7 @@ jobs:
         run: ls -R .
         shell: bash
       - name: Test bindings
-        run: docker run --rm -v $(pwd):/build -w /build node:${{ matrix.node }}-alpine yarn test
+        run: docker run --rm -v $(pwd):/build -w /build node:${{ matrix.node }}-alpine yarn test:node
 
   publish:
     name: Publish
