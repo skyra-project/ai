@@ -67,7 +67,7 @@ jobs:
           cache: yarn
           architecture: ${{ matrix.settings.architecture }}
       - name: Install
-        uses: actions-rs/toolchain@v1 #tag=v1
+        uses: actions-rs/toolchain@88dc2356392166efad76775c878094f4e83ff746 #tag=v1
         if: ${{ !matrix.settings.docker }}
         with:
           profile: minimal
@@ -75,7 +75,7 @@ jobs:
           toolchain: stable
           target: ${{ matrix.settings.target }}
       - name: Cache cargo
-        uses: actions/cache@v3 #tag=v3
+        uses: actions/cache@95f200e41cfa87b8e07f30196c0df17a67e67786 #tag=v3
         with:
           path: |
             ~/.cargo/registry/index/
@@ -93,7 +93,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build in docker
-        uses: addnab/docker-run-action@v3 #tag=v3
+        uses: addnab/docker-run-action@3e77f186b7a929ef010f183a9e24c0f9955ea609 #tag=v3
         if: ${{ matrix.settings.docker }}
         with:
           image: ${{ matrix.settings.docker }}
@@ -104,7 +104,7 @@ jobs:
         if: ${{ !matrix.settings.docker }}
         shell: bash
       - name: Upload artifact
-        uses: actions/upload-artifact@v3 #tag=v3
+        uses: actions/upload-artifact@6673cd052c4cd6fcf4b4e6e60ea986c889389535 #tag=v3
         with:
           name: bindings-${{ matrix.settings.target }}
           path: ${{ env.APP_NAME }}.*.node
@@ -129,7 +129,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Download artifacts
-        uses: actions/download-artifact@v3 #tag=v3
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 #tag=v3
         with:
           name: bindings-x86_64-pc-windows-msvc
           path: .
@@ -158,7 +158,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Download artifacts
-        uses: actions/download-artifact@v3 #tag=v3
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 #tag=v3
         with:
           name: bindings-x86_64-unknown-linux-gnu
           path: .
@@ -187,7 +187,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Download artifacts
-        uses: actions/download-artifact@v3 #tag=v3
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 #tag=v3
         with:
           name: bindings-x86_64-unknown-linux-musl
           path: .
@@ -212,7 +212,7 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
       - name: Download all artifacts
-        uses: actions/download-artifact@v3 # tag=v3
+        uses: actions/download-artifact@fb598a63ae348fa914e94cd0ff38f362e927b741 # tag=v3
         with:
           path: artifacts
       - name: Move artifacts
