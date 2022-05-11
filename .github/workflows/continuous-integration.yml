@@ -22,57 +22,58 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        - os: macos-latest
-          target: x86_64-apple-darwin
-          architecture: x64
-          build: |
-            yarn build
-            strip -x *.node
-        - os: windows-latest
-          build: yarn build
-          target: x86_64-pc-windows-msvc
-          architecture: x64
-        - os: ubuntu-latest
-          target: x86_64-unknown-linux-gnu
-          docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
-          build: |-
-            set -e &&
-            yarn build --target x86_64-unknown-linux-gnu &&
-            strip *.node
-        - os: ubuntu-latest
-          target: x86_64-unknown-linux-musl
-          docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
-          build: set -e && yarn build && strip *.node
-        - os: macos-latest
-          target: aarch64-apple-darwin
-          build: |
-            sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
-            export CC=$(xcrun -f clang);
-            export CXX=$(xcrun -f clang++);
-            SYSROOT=$(xcrun --sdk macosx --show-sdk-path);
-            export CFLAGS="-isysroot $SYSROOT -isystem $SYSROOT";
-            yarn build --target aarch64-apple-darwin
-            strip -x *.node
-    name: stable - ${{ matrix.target }} - node@16
+        settings:
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            architecture: x64
+            build: |
+              yarn build
+              strip -x *.node
+          - os: windows-latest
+            build: yarn build
+            target: x86_64-pc-windows-msvc
+            architecture: x64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-debian
+            build: |-
+              set -e &&
+              yarn build --target x86_64-unknown-linux-gnu &&
+              strip *.node
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            docker: ghcr.io/napi-rs/napi-rs/nodejs-rust:lts-alpine
+            build: set -e && yarn build && strip *.node
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            build: |
+              sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
+              export CC=$(xcrun -f clang);
+              export CXX=$(xcrun -f clang++);
+              SYSROOT=$(xcrun --sdk macosx --show-sdk-path);
+              export CFLAGS="-isysroot $SYSROOT -isystem $SYSROOT";
+              yarn build --target aarch64-apple-darwin
+              strip -x *.node
+    name: stable - ${{ matrix.settings.target }} - node@16
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Project
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
-      - name: Use Node.js v${{ matrix.node }}
+      - name: Use Node.js v16
         uses: actions/setup-node@56337c425554a6be30cdef71bf441f15be286854 # tag=v3
-        if: ${{ !matrix.docker }}
+        if: ${{ !matrix.settings.docker }}
         with:
           node-version: 16
           cache: yarn
-          architecture: ${{ matrix.architecture }}
+          architecture: ${{ matrix.settings.architecture }}
       - name: Install
         uses: actions-rs/toolchain@v1
-        if: ${{ !matrix.docker }}
+        if: ${{ !matrix.settings.docker }}
         with:
           profile: minimal
           override: true
           toolchain: stable
-          target: ${{ matrix.target }}
+          target: ${{ matrix.settings.target }}
       - name: Cache cargo
         uses: actions/cache@v3
         with:
@@ -84,28 +85,28 @@ jobs:
             .cargo-cache/registry/cache/
             .cargo-cache/git/db/
             target/
-          key: ${{ matrix.target }}-cargo-${{ matrix.os }}
+          key: ${{ matrix.settings.target }}-cargo-${{ matrix.settings.os }}
       - name: Setup toolchain
-        run: ${{ matrix.setup }}
-        if: ${{ matrix.setup }}
+        run: ${{ matrix.settings.setup }}
+        if: ${{ matrix.settings.setup }}
         shell: bash
       - name: Install dependencies
         run: yarn install --immutable
       - name: Build in docker
         uses: addnab/docker-run-action@v3
-        if: ${{ matrix.docker }}
+        if: ${{ matrix.settings.docker }}
         with:
-          image: ${{ matrix.docker }}
+          image: ${{ matrix.settings.docker }}
           options: '--user 0:0 -v ${{ github.workspace }}/.cargo-cache/git/db:/root/.cargo/git/db -v ${{ github.workspace }}/.cargo/registry/cache:/root/.cargo/registry/cache -v ${{ github.workspace }}/.cargo/registry/index:/root/.cargo/registry/index -v ${{ github.workspace }}:/build -w /build'
-          run: ${{ matrix.build }}
+          run: ${{ matrix.settings.build }}
       - name: Build
-        run: ${{ matrix.build }}
-        if: ${{ !matrix.docker }}
+        run: ${{ matrix.settings.build }}
+        if: ${{ !matrix.settings.docker }}
         shell: bash
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
-          name: bindings-${{ matrix.target }}
+          name: bindings-${{ matrix.settings.target }}
           path: ${{ env.APP_NAME }}.*.node
           if-no-files-found: error
 
