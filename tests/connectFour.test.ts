@@ -1,4 +1,4 @@
-import { connectFour } from '../lib/main';
+import { connectFour } from '../index';
 
 describe('ConnectFour', () => {
 	test('GIVEN no args THEN throws TypeError', () => {

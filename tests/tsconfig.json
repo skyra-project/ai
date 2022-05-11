@@ -1,9 +1,4 @@
 {
 	"extends": "../tsconfig.base.json",
-	"compilerOptions": {
-		"rootDir": "./",
-		"noEmit": true
-	},
-	"include": ["./"],
-	"references": [{ "path": "../lib" }]
+	"include": ["."]
 }

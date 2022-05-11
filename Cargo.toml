@@ -1,0 +1,19 @@
+[package]
+edition = "2021"
+name = "skyra-ai"
+version = "1.2.0"
+authors = ["Skyra Project"]
+description = "Lightning-fast AI for Skyra Project's games"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+napi = { version = "2.3.3", default-features = false, features = ["napi8"] }
+napi-derive = "2.3.3"
+
+[build-dependencies]
+napi-build = "1.2.1"
+
+[profile.release]
+lto = true

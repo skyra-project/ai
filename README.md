@@ -2,7 +2,7 @@
 
 # @skyra/ai
 
-**Advanced Gaming AI for Skyra**
+**Lightning-fast AI for Skyra Project's games**
 
 [![GitHub](https://img.shields.io/github/license/skyra-project/ai)](https://github.com/skyra-project/ai/blob/main/LICENSE.md)
 [![npm bundle size](https://img.shields.io/bundlephobia/min/@skyra/ai?logo=webpack&style=flat-square)](https://bundlephobia.com/result?p=@skyra/ai)

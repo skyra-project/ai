@@ -1,4 +1,4 @@
-import { ticTacToe } from '../lib/main';
+import { ticTacToe } from '../index';
 
 describe('TicTacToe', () => {
 	test('GIVEN no args THEN throws TypeError', () => {
