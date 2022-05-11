@@ -1,4 +1,8 @@
 {
 	"extends": "./tsconfig.base.json",
-	"include": ["tests", "scripts", "jest.config.mjs"]
+	"compilerOptions": {
+		"allowJs": true,
+		"checkJs": true
+	},
+	"include": ["tests", "scripts", "jest.config.mjs", "index.js", "index.d.ts"]
 }

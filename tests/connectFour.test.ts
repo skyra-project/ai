@@ -2,17 +2,17 @@ import { connectFour } from '../index';
 
 describe('ConnectFour', () => {
 	test('GIVEN no args THEN throws TypeError', () => {
-		// @ts-expect-error
+		// @ts-expect-error: Invalid input
 		expect(() => connectFour()).toThrow('Get TypedArray info failed');
 	});
 
 	test('GIVEN null THEN throws TypeError', () => {
-		// @ts-expect-error
+		// @ts-expect-error: Invalid input
 		expect(() => connectFour(null)).toThrow('Get TypedArray info failed');
 	});
 
 	test('GIVEN array THEN throws TypeError', () => {
-		// @ts-expect-error
+		// @ts-expect-error: Invalid input
 		// prettier-ignore
 		expect(() => connectFour([
 			0, 0, 0, 0, 0, 0, 0,
@@ -149,5 +149,3 @@ describe('ConnectFour', () => {
 		expect(connectFour(new Uint8Array([2, 2, 2, 2, 2, 2, 2, 2, 2]))).toEqual(-1);
 	});
 });
-
-describe('Connect-Four', () => {});

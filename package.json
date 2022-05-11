@@ -11,6 +11,9 @@
 		"test": "run-p \"test:node\" \"test:rust\"",
 		"test:node": "jest",
 		"test:rust": "cargo test",
+		"fmt": "run-p \"fmt:node\" \"fmt:rust\"",
+		"fmt:node": "prettier --write .github npm tests index.js index.d.ts",
+		"fmt:rust": "cargo fmt",
 		"clean": "node scripts/clean.mjs",
 		"artifacts": "napi artifacts",
 		"build": "napi build --platform --release",
@@ -69,6 +72,9 @@
 	"engines": {
 		"node": ">=v14.18.0",
 		"npm": ">=7.24.2"
+	},
+	"eslintConfig": {
+		"extends": "@sapphire"
 	},
 	"commitlint": {
 		"extends": [

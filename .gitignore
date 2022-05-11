@@ -39,9 +39,6 @@ Cargo.lock
 
 *.node
 
-index.js
-index.d.ts
-
 # Ignore package locks
 package-lock.json
 

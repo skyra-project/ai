@@ -2,17 +2,17 @@ import { INVALID_INDEX, ticTacToe } from '../index';
 
 describe('TicTacToe', () => {
 	test('GIVEN no args THEN throws TypeError', () => {
-		// @ts-expect-error
+		// @ts-expect-error: Invalid input
 		expect(() => ticTacToe()).toThrow('Get TypedArray info failed');
 	});
 
 	test('GIVEN null THEN throws TypeError', () => {
-		// @ts-expect-error
+		// @ts-expect-error: Invalid input
 		expect(() => ticTacToe(null)).toThrow('Get TypedArray info failed');
 	});
 
 	test('GIVEN array THEN throws TypeError', () => {
-		// @ts-expect-error
+		// @ts-expect-error: Invalid input
 		expect(() => ticTacToe([0, 0, 0, 0, 0, 0, 0, 0, 0])).toThrow('Get TypedArray info failed');
 	});
 
@@ -88,5 +88,3 @@ describe('TicTacToe', () => {
 		expect(ticTacToe(new Uint8Array([2, 2, 2, 2, 2, 2, 2, 2, 2]))).toEqual(INVALID_INDEX);
 	});
 });
-
-describe('Connect-Four', () => {});

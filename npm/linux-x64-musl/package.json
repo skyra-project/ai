@@ -1,21 +1,21 @@
 {
-  "name": "@skyra/ai-linux-x64-musl",
-  "version": "1.2.0",
-  "os": [
-    "linux"
-  ],
-  "cpu": [
-    "x64"
-  ],
-  "main": "ai.linux-x64-musl.node",
-  "files": [
-    "ai.linux-x64-musl.node"
-  ],
-  "license": "MIT",
-  "engines": {
-    "node": ">= 10"
-  },
-  "libc": [
-    "musl"
-  ]
+	"name": "@skyra/ai-linux-x64-musl",
+	"version": "1.2.0",
+	"os": [
+		"linux"
+	],
+	"cpu": [
+		"x64"
+	],
+	"main": "ai.linux-x64-musl.node",
+	"files": [
+		"ai.linux-x64-musl.node"
+	],
+	"license": "MIT",
+	"engines": {
+		"node": ">= 10"
+	},
+	"libc": [
+		"musl"
+	]
 }
