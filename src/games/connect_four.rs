@@ -75,6 +75,7 @@ impl AiBoard {
 	unsafe fn check_4(self: &AiBoard, cell: usize, a: isize, b: isize, c: isize, d: isize) -> bool {
 		debug_assert!(cell as isize + a >= 0);
 		debug_assert!(cell as isize + d < BOARD_CELLS as isize);
+		debug_assert!(self.cells[cell] != Players::Unset);
 
 		let ptr = self.cells.as_ptr().add(cell);
 
@@ -89,6 +90,7 @@ impl AiBoard {
 	unsafe fn check_5(self: &AiBoard, cell: usize, a: isize, b: isize, c: isize, d: isize, e: isize) -> bool {
 		debug_assert!(cell as isize + a >= 0);
 		debug_assert!(cell as isize + e < BOARD_CELLS as isize);
+		debug_assert!(self.cells[cell] != Players::Unset);
 
 		let ptr = self.cells.as_ptr().add(cell);
 
@@ -105,6 +107,7 @@ impl AiBoard {
 	unsafe fn check_6(self: &AiBoard, cell: usize, a: isize, b: isize, c: isize, d: isize, e: isize, f: isize) -> bool {
 		debug_assert!(cell as isize + a >= 0);
 		debug_assert!(cell as isize + f < BOARD_CELLS as isize);
+		debug_assert!(self.cells[cell] != Players::Unset);
 
 		let ptr = self.cells.as_ptr().add(cell);
 
@@ -132,6 +135,7 @@ impl AiBoard {
 	) -> bool {
 		debug_assert!(cell as isize + a >= 0);
 		debug_assert!(cell as isize + g < BOARD_CELLS as isize);
+		debug_assert!(self.cells[cell] != Players::Unset);
 
 		let ptr = self.cells.as_ptr().add(cell);
 
@@ -182,8 +186,9 @@ impl AiBoard {
 		}
 	}
 
-	unsafe fn status(self: &AiBoard, last_move: usize) -> bool {
-		debug_assert!(last_move < BOARD_CELLS);
+	unsafe fn status(self: &AiBoard, last_cell_offset: usize) -> bool {
+		debug_assert!(last_cell_offset < BOARD_CELLS);
+		debug_assert!(self.cells[last_cell_offset] != Players::Unset);
 
 		const I_BOARD_WIDTH: isize = BOARD_WIDTH as isize;
 
@@ -191,7 +196,7 @@ impl AiBoard {
 		const B1: isize = I_BOARD_WIDTH;
 		const B2: isize = B1 * 2;
 		const B3: isize = B1 * 3;
-		if AVAILABLE_BOTTOM[last_move] == 3 && self.check_4(last_move, 0, B1, B2, B3) {
+		if AVAILABLE_BOTTOM[last_cell_offset] == 3 && self.check_4(last_cell_offset, 0, B1, B2, B3) {
 			return true;
 		}
 
@@ -219,9 +224,9 @@ impl AiBoard {
 		const TR2: isize = TR1 * 2;
 		const TR3: isize = TR1 * 3;
 
-		self.status_row(AVAILABLE_HORIZONTAL[last_move], last_move, L1, L2, L3, R1, R2, R3)
-			|| self.status_row(AVAILABLE_DIAGONAL_TL[last_move], last_move, TL1, TL2, TL3, BR1, BR2, BR3)
-			|| self.status_row(AVAILABLE_DIAGONAL_BL[last_move], last_move, BL1, BL2, BL3, TR1, TR2, TR3)
+		self.status_row(AVAILABLE_HORIZONTAL[last_cell_offset], last_cell_offset, L1, L2, L3, R1, R2, R3)
+			|| self.status_row(AVAILABLE_DIAGONAL_TL[last_cell_offset], last_cell_offset, TL1, TL2, TL3, BR1, BR2, BR3)
+			|| self.status_row(AVAILABLE_DIAGONAL_BL[last_cell_offset], last_cell_offset, BL1, BL2, BL3, TR1, TR2, TR3)
 	}
 
 	fn column_available(self: &AiBoard, column: usize) -> bool {
@@ -240,22 +245,27 @@ impl AiBoard {
 	fn piece_add(self: &mut AiBoard, column: usize, offset: usize, player: Players) {
 		debug_assert!(column < BOARD_WIDTH);
 		debug_assert!(self.remaining[column] != 0);
+		debug_assert!(offset < BOARD_CELLS);
+		debug_assert!(self.cells[offset] == Players::Unset);
 
 		self.remaining[column] -= 1;
 		self.cells[offset] = player;
 	}
 
 	fn piece_remove(self: &mut AiBoard, column: usize, offset: usize) {
+		debug_assert!(column < BOARD_WIDTH);
 		debug_assert!(self.remaining[column] != BOARD_HEIGHT as u8);
+		debug_assert!(offset < BOARD_CELLS);
+		debug_assert!(self.cells[offset] != Players::Unset);
 
 		self.remaining[column] += 1;
 		self.cells[offset] = Players::Unset;
 	}
 
 	/// Minimum is `Players::Player`
-	fn min(self: &mut AiBoard, last_move: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
+	fn min(self: &mut AiBoard, last_cell_offset: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
 		unsafe {
-			if self.status(last_move) {
+			if self.status(last_cell_offset) {
 				return OUTCOME_MACHINE_WINS;
 			}
 		}
@@ -304,9 +314,9 @@ impl AiBoard {
 	}
 
 	/// Maximum is `Players::Machine`
-	fn max(self: &mut AiBoard, last_move: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
+	fn max(self: &mut AiBoard, last_cell_offset: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
 		unsafe {
-			if self.status(last_move) {
+			if self.status(last_cell_offset) {
 				return OUTCOME_HUMAN_WINS;
 			}
 		}
@@ -383,6 +393,11 @@ impl AiBoard {
 			if points > max_v {
 				max_v = points;
 				column = c;
+
+				// Break the loop earlier if we have found a winning move:
+				if points >= OUTCOME_MACHINE_WINS {
+					break;
+				}
 			}
 		}
 
@@ -490,8 +505,7 @@ mod tests {
 		use super::super::*;
 
 		macro_rules! test_panic {
-			($($name:ident: [$cells:expr, $last_column:expr, $offsets:expr],)*) => {
-			$(
+			($($name:ident: [$cells:expr, $last_column:expr, $offsets:expr],)*) => ($(
 				#[test]
 				#[should_panic]
 				fn $name() {
@@ -501,13 +515,13 @@ mod tests {
 						board.check_4($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3);
 					}
 				}
-			)*
-			};
+			)*);
 		}
 
 		test_panic! {
 			test_out_of_range_under: [create_cells!(0, 2, 3, 4), 0, (-1, 0, 1, 2)],
 			test_out_of_range_over: [create_cells!(38, 39, 40, 41), 39, (0, 1, 2, 3)],
+			test_invalid_offset: [create_cells!(0, 2), 1, (-1, 0, 1, 2)],
 		}
 
 		#[test]
@@ -546,8 +560,7 @@ mod tests {
 		use super::super::*;
 
 		macro_rules! test_panic {
-			($($name:ident: [$cells:expr, $last_column:expr, $offsets:expr],)*) => {
-			$(
+			($($name:ident: [$cells:expr, $last_column:expr, $offsets:expr],)*) => ($(
 				#[test]
 				#[should_panic]
 				fn $name() {
@@ -557,13 +570,13 @@ mod tests {
 						board.check_5($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4);
 					}
 				}
-			)*
-			};
+			)*);
 		}
 
 		test_panic! {
 			test_out_of_range_under: [create_cells!(0, 2, 3, 4), 0, (-1, 0, 1, 2, 3)],
 			test_out_of_range_over: [create_cells!(38, 39, 40, 41), 39, (-1, 0, 1, 2, 3)],
+			test_invalid_offset: [create_cells!(0, 2, 3, 4, 5), 1, (-1, 0, 1, 2, 3)],
 		}
 
 		#[test]
@@ -571,7 +584,7 @@ mod tests {
 			let board = AiBoard::new(create_cells!(0, 2, 3, 4));
 
 			unsafe {
-				assert!(!board.check_5(1, -1, 0, 1, 2, 3));
+				assert!(!board.check_5(2, -1, 0, 1, 2, 3));
 			}
 		}
 
@@ -602,8 +615,7 @@ mod tests {
 		use super::super::*;
 
 		macro_rules! test_panic {
-			($($name:ident: [$cells:expr, $last_column:expr, $offsets:expr],)*) => {
-			$(
+			($($name:ident: [$cells:expr, $last_column:expr, $offsets:expr],)*) => ($(
 				#[test]
 				#[should_panic]
 				fn $name() {
@@ -613,13 +625,13 @@ mod tests {
 						board.check_6($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4, $offsets.5);
 					}
 				}
-			)*
-			};
+			)*);
 		}
 
 		test_panic! {
 			test_out_of_range_under: [create_cells!(0, 2, 3, 4), 0, (-2, -1, 0, 1, 2, 3)],
 			test_out_of_range_over: [create_cells!(38, 39, 40, 41), 39, (-2, -1, 0, 1, 2, 3)],
+			test_invalid_offset: [create_cells!(0, 2, 3, 4, 5), 1, (-2, -1, 0, 1, 2, 3)],
 		}
 
 		#[test]
@@ -658,8 +670,7 @@ mod tests {
 		use super::super::*;
 
 		macro_rules! test_panic {
-			($($name:ident: [$cells:expr, $cell:expr],)*) => {
-			$(
+			($($name:ident: [$cells:expr, $cell:expr],)*) => ($(
 				#[test]
 				#[should_panic]
 				fn $name() {
@@ -669,13 +680,13 @@ mod tests {
 						board.check_7($cell, -3, -2, -1, 0, 1, 2, 3);
 					}
 				}
-			)*
-			};
+			)*);
 		}
 
 		test_panic! {
 			test_out_of_range_under: [create_cells!(0, 2, 3, 4), 0],
 			test_out_of_range_over: [create_cells!(38, 39, 40, 41), 39],
+			test_invalid_offset: [create_cells!(0, 2, 3, 4, 5), 1],
 		}
 
 		#[test]
@@ -711,47 +722,96 @@ mod tests {
 	mod status {
 		use super::super::*;
 
-		// TODO: Negative assertions
+		macro_rules! test_panic {
+			($($name:ident: [$cells:expr, $last_cell_offset:expr],)*) => ($(
+				#[test]
+				#[should_panic]
+				fn $name() {
+					let board = AiBoard::new($cells);
 
-		macro_rules! test_status {
-			($($name:ident: [$cells:expr, $last_column:expr],)*) => {
-			$(
+					unsafe {
+						board.status($last_cell_offset);
+					}
+				}
+			)*);
+		}
+
+		test_panic! {
+			test_out_of_range_over: [create_cells!(), 42],
+			test_invalid_offset: [create_cells!(0, 2), 1],
+		}
+
+		macro_rules! test_false {
+			($($name:ident: [$cells:expr, $last_cell_offset:expr],)*) => ($(
 				#[test]
 				fn $name() {
 					let board = AiBoard::new($cells);
 
 					unsafe {
-						assert!(board.status($last_column));
+						assert!(!board.status($last_cell_offset));
 					}
 				}
-			)*
-			}
+			)*);
 		}
 
-		test_status! {
-			test_horizontal_offset_0: [create_cells!(0, 1, 2, 3), 0],
-			test_horizontal_offset_1: [create_cells!(0, 1, 2, 3), 1],
-			test_horizontal_offset_2: [create_cells!(0, 1, 2, 3), 2],
-			test_horizontal_offset_3: [create_cells!(0, 1, 2, 3), 3],
-			test_vertical_offset_0: [create_cells!(0, 7, 14, 21), 0],
-			test_vertical_offset_1: [create_cells!(7, 14, 21, 28), 0],
-			test_vertical_offset_2: [create_cells!(14, 21, 28, 35), 0],
-			test_vertical_offset_3: [create_cells!(35, 36, 37, 40), 0],
-			test_tl_br_offset_0: [create_cells!(0, 8, 16, 24), 0],
-			test_tl_br_offset_1: [create_cells!(0, 8, 16, 24), 1],
-			test_tl_br_offset_2: [create_cells!(0, 8, 16, 24), 2],
-			test_tl_br_offset_3: [create_cells!(0, 8, 16, 24), 3],
-			test_bl_tr_offset_0: [create_cells!(21, 15, 9, 3), 21],
-			test_bl_tr_offset_1: [create_cells!(21, 15, 9, 3), 15],
-			test_bl_tr_offset_2: [create_cells!(21, 15, 9, 3), 9],
-			test_bl_tr_offset_3: [create_cells!(21, 15, 9, 3), 3],
+		test_false! {
+			test_fail_horizontal_0: [create_cells!(0, 1, 3, 4), 0],
+			test_fail_horizontal_1: [create_cells!(1, 2, 3), 1],
+			test_fail_horizontal_2: [create_cells!(2), 2],
+			test_fail_horizontal_3: [create_cells!(3), 3],
+			test_fail_vertical_0: [create_cells!(21), 21],
+			test_fail_vertical_1: [create_cells!(21, 28), 21],
+			test_fail_vertical_2: [create_cells!(21, 28, 35), 28],
+			test_fail_vertical_3: [create_cells!(37, 40), 40],
+			test_fail_tl_br_0: [create_cells!(0, 8, 24), 0],
+			test_fail_tl_br_1: [create_cells!(0, 8, 16), 8],
+			test_fail_tl_br_2: [create_cells!(8, 16, 24), 16],
+			test_fail_bl_tr_0: [create_cells!(21), 21],
+			test_fail_bl_tr_1: [create_cells!(21, 15, 3), 21],
+			test_fail_bl_tr_2: [create_cells!(21, 9, 3), 21],
+		}
+
+		macro_rules! test_true {
+			($($name:ident: [$cells:expr, $last_cell_offset:expr],)*) => ($(
+				#[test]
+				fn $name() {
+					let board = AiBoard::new($cells);
+
+					unsafe {
+						assert!(board.status($last_cell_offset));
+					}
+				}
+			)*);
+		}
+
+		test_true! {
+			test_pass_horizontal_offset_0: [create_cells!(0, 1, 2, 3), 0],
+			test_pass_horizontal_offset_1: [create_cells!(0, 1, 2, 3), 1],
+			test_pass_horizontal_offset_2: [create_cells!(0, 1, 2, 3), 2],
+			test_pass_horizontal_offset_3: [create_cells!(0, 1, 2, 3), 3],
+			test_pass_vertical_offset_0: [create_cells!(0, 7, 14, 21), 0],
+			test_pass_vertical_offset_1: [create_cells!(7, 14, 21, 28), 7],
+			test_pass_vertical_offset_2: [create_cells!(14, 21, 28, 35), 14],
+			test_pass_tl_br_offset_0: [create_cells!(0, 8, 16, 24), 0],
+			test_pass_tl_br_offset_1: [create_cells!(0, 8, 16, 24), 8],
+			test_pass_tl_br_offset_2: [create_cells!(0, 8, 16, 24), 16],
+			test_pass_tl_br_offset_3: [create_cells!(0, 8, 16, 24), 24],
+			test_pass_bl_tr_offset_0: [create_cells!(21, 15, 9, 3), 21],
+			test_pass_bl_tr_offset_1: [create_cells!(21, 15, 9, 3), 15],
+			test_pass_bl_tr_offset_2: [create_cells!(21, 15, 9, 3), 9],
+			test_pass_bl_tr_offset_3: [create_cells!(21, 15, 9, 3), 3],
 		}
 	}
 
 	mod column_available {
 		use super::super::*;
 
-		// TODO: Panic assertions
+		#[test]
+		#[should_panic]
+		fn test_out_of_range_over() {
+			let board = AiBoard::new(create_cells!());
+			board.column_available(7);
+		}
 
 		#[test]
 		fn test_0() {
@@ -784,13 +844,20 @@ mod tests {
 	mod piece_offset {
 		use super::super::*;
 
-		// TODO: Panic assertions
+		macro_rules! test_panic {
+			($($name:ident: [$cells:expr, $column:expr],)*) => ($(
+				#[test]
+				#[should_panic]
+				fn $name() {
+					let board = AiBoard::new($cells);
+					board.piece_offset($column);
+				}
+			)*);
+		}
 
-		#[test]
-		#[should_panic]
-		fn test_0() {
-			let board = AiBoard::new(create_cells!(0, 7, 14, 21, 28, 35));
-			board.piece_offset(0);
+		test_panic! {
+			test_column_offset_overflow: [create_cells!(0, 7, 14, 21, 28, 35), 0],
+			test_invalid_offset: [create_cells!(), 7],
 		}
 
 		macro_rules! generate_test {
@@ -819,7 +886,23 @@ mod tests {
 	mod piece_add {
 		use super::super::*;
 
-		// TODO: Panic assertions
+		macro_rules! test_panic {
+			($($name:ident: [$cells:expr, $column:expr, $offset:expr],)*) => ($(
+				#[test]
+				#[should_panic]
+				fn $name() {
+					let mut board = AiBoard::new($cells);
+					board.piece_add($column, $offset, Players::Player);
+				}
+			)*);
+		}
+
+		test_panic! {
+			test_column_out_of_range: [create_cells!(), 7, 7],
+			test_column_full: [create_cells!(0, 7, 14, 21, 28, 35), 0, 0],
+			test_offset_out_of_range: [create_cells!(), 0, 42],
+			test_already_set: [create_cells!(0), 0, 0],
+		}
 
 		#[test]
 		#[should_panic]
@@ -855,18 +938,26 @@ mod tests {
 	mod piece_remove {
 		use super::super::*;
 
-		// TODO: Panic assertions
+		macro_rules! test_panic {
+			($($name:ident: [$cells:expr, $column:expr, $offset:expr],)*) => ($(
+				#[test]
+				#[should_panic]
+				fn $name() {
+					let mut board = AiBoard::new($cells);
+					board.piece_remove($column, $offset);
+				}
+			)*);
+		}
 
-		#[test]
-		#[should_panic]
-		fn test_6() {
-			let mut board = AiBoard::new(create_cells!());
-			board.piece_remove(0, 35);
+		test_panic! {
+			test_column_out_of_range: [create_cells!(), 7, 7],
+			test_column_empty: [create_cells!(), 0, 35],
+			test_offset_out_of_range: [create_cells!(0), 0, 42],
+			test_already_unset: [create_cells!(35), 0, 0],
 		}
 
 		macro_rules! generate_test {
-			($($name:ident: [$cells:expr, $offset:expr],)*) => {
-			$(
+			($($name:ident: [$cells:expr, $offset:expr],)*) => ($(
 				#[test]
 				fn $name() {
 					let mut board = AiBoard::new($cells);
@@ -874,8 +965,7 @@ mod tests {
 
 					assert_eq!(board.cells[$offset], Players::Unset);
 				}
-			)*
-			}
+			)*);
 		}
 
 		generate_test! {
@@ -890,4 +980,5 @@ mod tests {
 
 	// TODO: min assertions
 	// TODO: max assertions
+	// TODO: max_top assertions
 }

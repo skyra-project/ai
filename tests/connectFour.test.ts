@@ -85,12 +85,28 @@ describe('ConnectFour', () => {
 		]))).toEqual(4);
 	});
 
-	test.skip('GIVEN possible vertical row (0) THEN returns 4', () => {
-		expect(connectFour(new Uint8Array([0, 1, 2, 0, 0, 2, 0, 1, 0]))).toEqual(4);
+	test('GIVEN possible vertical row (0) THEN returns 0', () => {
+		// prettier-ignore
+		expect(connectFour(new Uint8Array([
+			0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0,
+			2, 1, 0, 0, 0, 0, 0,
+			2, 1, 1, 1, 0, 0, 0,
+			2, 1, 2, 2, 0, 0, 0
+		]))).toEqual(0);
 	});
 
-	test.skip('GIVEN possible vertical row (1) THEN returns 7', () => {
-		expect(connectFour(new Uint8Array([0, 2, 0, 0, 2, 0, 1, 0, 1]))).toEqual(7);
+	test('GIVEN possible vertical row (3) THEN returns 3', () => {
+		// prettier-ignore
+		expect(connectFour(new Uint8Array([
+			0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0,
+			0, 0, 0, 0, 0, 0, 0,
+			1, 1, 2, 0, 0, 0, 0,
+			1, 1, 2, 1, 0, 0, 0,
+			2, 1, 2, 2, 0, 0, 0
+		]))).toEqual(2);
 	});
 
 	test.skip('GIVEN possible vertical row (2) THEN returns 3', () => {
