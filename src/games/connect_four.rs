@@ -192,7 +192,7 @@ impl AiBoard {
 			return false;
 		}
 
-		debug_assert!(last_move < BOARD_WIDTH);
+		debug_assert!(last_move < BOARD_CELLS);
 
 		const I_BOARD_WIDTH: isize = BOARD_WIDTH as isize;
 
@@ -449,7 +449,6 @@ mod tests {
 		#[test]
 		fn test_row_filled() {
 			let cells = create_cells!(35, 36, 37, 38, 39, 40, 41);
-			println!("{:?}", cells);
 			let remaining: AiRemaining = [5; 7];
 			let board = AiBoard::new(cells);
 
@@ -711,22 +710,22 @@ mod tests {
 		}
 
 		test_status! {
-			test_status_horizontal_offset_0: [create_cells!(0, 1, 2, 3), 0],
-			test_status_horizontal_offset_1: [create_cells!(0, 1, 2, 3), 1],
-			test_status_horizontal_offset_2: [create_cells!(0, 1, 2, 3), 2],
-			test_status_horizontal_offset_3: [create_cells!(0, 1, 2, 3), 3],
-			test_status_vertical_offset_0: [create_cells!(0, 7, 14, 21), 0],
-			test_status_vertical_offset_1: [create_cells!(7, 14, 21, 28), 0],
-			test_status_vertical_offset_2: [create_cells!(14, 21, 28, 35), 0],
-			test_status_vertical_offset_3: [create_cells!(35, 36, 37, 40), 0],
-			test_status_tl_br_offset_0: [create_cells!(0, 8, 16, 24), 0],
-			test_status_tl_br_offset_1: [create_cells!(0, 8, 16, 24), 1],
-			test_status_tl_br_offset_2: [create_cells!(0, 8, 16, 24), 2],
-			test_status_tl_br_offset_3: [create_cells!(0, 8, 16, 24), 3],
-			test_status_bl_tr_offset_0: [create_cells!(21, 15, 9, 3), 0],
-			test_status_bl_tr_offset_1: [create_cells!(21, 15, 9, 3), 1],
-			test_status_bl_tr_offset_2: [create_cells!(21, 15, 9, 3), 2],
-			test_status_bl_tr_offset_3: [create_cells!(21, 15, 9, 3), 3],
+			test_horizontal_offset_0: [create_cells!(0, 1, 2, 3), 0],
+			test_horizontal_offset_1: [create_cells!(0, 1, 2, 3), 1],
+			test_horizontal_offset_2: [create_cells!(0, 1, 2, 3), 2],
+			test_horizontal_offset_3: [create_cells!(0, 1, 2, 3), 3],
+			test_vertical_offset_0: [create_cells!(0, 7, 14, 21), 0],
+			test_vertical_offset_1: [create_cells!(7, 14, 21, 28), 0],
+			test_vertical_offset_2: [create_cells!(14, 21, 28, 35), 0],
+			test_vertical_offset_3: [create_cells!(35, 36, 37, 40), 0],
+			test_tl_br_offset_0: [create_cells!(0, 8, 16, 24), 0],
+			test_tl_br_offset_1: [create_cells!(0, 8, 16, 24), 1],
+			test_tl_br_offset_2: [create_cells!(0, 8, 16, 24), 2],
+			test_tl_br_offset_3: [create_cells!(0, 8, 16, 24), 3],
+			test_bl_tr_offset_0: [create_cells!(21, 15, 9, 3), 21],
+			test_bl_tr_offset_1: [create_cells!(21, 15, 9, 3), 15],
+			test_bl_tr_offset_2: [create_cells!(21, 15, 9, 3), 9],
+			test_bl_tr_offset_3: [create_cells!(21, 15, 9, 3), 3],
 		}
 	}
 
