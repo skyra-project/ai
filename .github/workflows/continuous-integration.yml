@@ -110,15 +110,13 @@ jobs:
           if-no-files-found: error
 
   test-macOS-windows-binding:
-    name: Test bindings on ${{ matrix.target }} - node@${{ matrix.node }}
+    name: Test bindings on Windows-x64-msvc - node@${{ matrix.node }}
     needs: build
     strategy:
       fail-fast: false
       matrix:
-        - os: windows-latest
-          target: x86_64-pc-windows-msvc
         node: [16, 18]
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     steps:
       - name: Checkout Project
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b # tag=v3
@@ -132,7 +130,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v3
         with:
-          name: bindings-${{ matrix.target }}
+          name: bindings-x86_64-pc-windows-msvc
           path: .
       - name: List packages
         run: ls -R .
