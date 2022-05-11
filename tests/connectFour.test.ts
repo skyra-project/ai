@@ -3,12 +3,12 @@ import { connectFour } from '../index';
 describe('ConnectFour', () => {
 	test('GIVEN no args THEN throws TypeError', () => {
 		// @ts-expect-error
-		expect(() => connectFour()).toThrow('data must be a typed array');
+		expect(() => connectFour()).toThrow('Get TypedArray info failed');
 	});
 
 	test('GIVEN null THEN throws TypeError', () => {
 		// @ts-expect-error
-		expect(() => connectFour(null)).toThrow('data must be a typed array');
+		expect(() => connectFour(null)).toThrow('Get TypedArray info failed');
 	});
 
 	test('GIVEN array THEN throws TypeError', () => {
@@ -21,7 +21,7 @@ describe('ConnectFour', () => {
 			0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0,
 			0, 0, 0, 0, 0, 0, 0
-		])).toThrow('data must be a typed array');
+		])).toThrow('Get TypedArray info failed');
 	});
 
 	test('GIVEN Uint8Array with too little elements THEN throws TypeError', () => {

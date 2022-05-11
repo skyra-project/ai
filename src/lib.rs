@@ -18,7 +18,7 @@ pub const INVALID_INDEX: i64 = common::players::INVALID_INDEX as i64;
 pub fn connect_four_handler(v: Uint8Array, maximum_depth: Option<u32>) -> Result<i64, Error> {
 	let input = v.to_vec();
 	if input.len() != connect_four::BOARD_CELLS {
-		return Err(Error::from_reason("data must have exactly 9 numbers"));
+		return Err(Error::from_reason("data must have exactly 42 numbers"));
 	}
 
 	let mut cells: connect_four::AiCells = [Players::Unset; connect_four::BOARD_CELLS];

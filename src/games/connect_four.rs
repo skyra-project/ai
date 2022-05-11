@@ -5,29 +5,9 @@ pub const BOARD_WIDTH: usize = 7;
 pub const BOARD_HEIGHT: usize = 6;
 pub const BOARD_CELLS: usize = BOARD_WIDTH * BOARD_HEIGHT;
 
-pub type AiCells = [Players; BOARD_CELLS];
-pub type AiRemaining = [u8; BOARD_WIDTH];
-
-pub struct AiBoard {
-	pub cells: AiCells,
-	pub remaining: AiRemaining,
-}
-
-impl AiBoard {
-	pub fn new(cells: AiCells) -> Self {
-		let mut remaining = [0; BOARD_WIDTH];
-		for x in 0..BOARD_WIDTH {
-			let mut y: u8 = 0;
-			while y < BOARD_HEIGHT as u8 && cells[y as usize * BOARD_WIDTH + x] == Players::Unset {
-				y += 1;
-			}
-
-			remaining[x] = y;
-		}
-
-		Self { cells, remaining }
-	}
-}
+const OUTCOME_HUMAN_WINS: i8 = -20;
+const OUTCOME_MACHINE_WINS: i8 = 20;
+const OUTCOME_DRAW: i8 = 0;
 
 const AVAILABLE_BOTTOM: [u8; BOARD_CELLS] = [
 	0b0011, 0b0011, 0b0011, 0b0011, 0b0011, 0b0011, 0b0011, //
@@ -65,18 +45,33 @@ const AVAILABLE_DIAGONAL_BL: [u8; BOARD_CELLS] = [
 	0b0011, 0b0011, 0b0011, 0b0011, 0b0010, 0b0001, 0b0000,
 ];
 
-const UNDEFINED_LAST_MOVE: usize = usize::MAX;
-
-struct AiResults {
-	pub points: i8,
-	pub position: usize,
-}
-
 fn compare(a: Players, b: Players, c: Players, d: Players) -> bool {
 	a == b && b == c && c == d
 }
 
+pub type AiCells = [Players; BOARD_CELLS];
+pub type AiRemaining = [u8; BOARD_WIDTH];
+
+pub struct AiBoard {
+	pub cells: AiCells,
+	pub remaining: AiRemaining,
+}
+
 impl AiBoard {
+	pub fn new(cells: AiCells) -> Self {
+		let mut remaining = [0; BOARD_WIDTH];
+		for x in 0..BOARD_WIDTH {
+			let mut y: u8 = 0;
+			while y < BOARD_HEIGHT as u8 && cells[y as usize * BOARD_WIDTH + x] == Players::Unset {
+				y += 1;
+			}
+
+			remaining[x] = y;
+		}
+
+		Self { cells, remaining }
+	}
+
 	unsafe fn check_4(self: &AiBoard, cell: usize, a: isize, b: isize, c: isize, d: isize) -> bool {
 		debug_assert!(cell as isize + a >= 0);
 		debug_assert!(cell as isize + d < BOARD_CELLS as isize);
@@ -188,10 +183,6 @@ impl AiBoard {
 	}
 
 	unsafe fn status(self: &AiBoard, last_move: usize) -> bool {
-		if last_move == UNDEFINED_LAST_MOVE {
-			return false;
-		}
-
 		debug_assert!(last_move < BOARD_CELLS);
 
 		const I_BOARD_WIDTH: isize = BOARD_WIDTH as isize;
@@ -262,15 +253,15 @@ impl AiBoard {
 	}
 
 	/// Minimum is `Players::Player`
-	fn min(self: &mut AiBoard, last_move: usize, remaining: u8, alpha: i8, beta: i8) -> AiResults {
+	fn min(self: &mut AiBoard, last_move: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
 		unsafe {
 			if self.status(last_move) {
-				return AiResults { points: 100, position: INVALID_INDEX };
+				return OUTCOME_MACHINE_WINS;
 			}
 		}
 
 		if remaining == 0 {
-			return AiResults { points: 0, position: INVALID_INDEX };
+			return OUTCOME_DRAW;
 		}
 
 		// Possible values for min_v are:
@@ -280,11 +271,10 @@ impl AiBoard {
 		//
 		// We're initially setting it to 2 as worse than the worst case:
 		let mut min_v = i8::MIN;
-		let mut column = INVALID_INDEX;
 		let mut local_beta = beta;
 
 		for c in 0..BOARD_WIDTH {
-			if self.column_available(c) {
+			if !self.column_available(c) {
 				continue;
 			}
 
@@ -294,7 +284,7 @@ impl AiBoard {
 			// That's one branch of the game tree:
 			self.piece_add(c, offset, Players::Player);
 
-			let m = self.min(offset, remaining - 1, alpha, local_beta).points;
+			let m = self.max(offset, remaining - 1, alpha, local_beta);
 
 			// Setting back the field to empty:
 			self.piece_remove(c, offset);
@@ -302,7 +292,6 @@ impl AiBoard {
 			// Fixing the min_v value if needed:
 			if m < min_v {
 				min_v = m;
-				column = c;
 
 				local_beta = cmp::min(local_beta, min_v);
 				if alpha >= local_beta {
@@ -311,19 +300,19 @@ impl AiBoard {
 			}
 		}
 
-		AiResults { points: min_v, position: column }
+		min_v
 	}
 
 	/// Maximum is `Players::Machine`
-	fn max(self: &mut AiBoard, last_move: usize, remaining: u8, alpha: i8, beta: i8) -> AiResults {
+	fn max(self: &mut AiBoard, last_move: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
 		unsafe {
 			if self.status(last_move) {
-				return AiResults { points: -100, position: INVALID_INDEX };
+				return OUTCOME_HUMAN_WINS;
 			}
 		}
 
 		if remaining == 0 {
-			return AiResults { points: 0, position: INVALID_INDEX };
+			return OUTCOME_DRAW;
 		}
 
 		// Possible values for max_v are:
@@ -333,11 +322,10 @@ impl AiBoard {
 		//
 		// We're initially setting it to -2 as worse than the worst case:
 		let mut max_v = i8::MIN;
-		let mut column = INVALID_INDEX;
 		let mut local_alpha = alpha;
 
 		for c in 0..BOARD_WIDTH {
-			if self.column_available(c) {
+			if !self.column_available(c) {
 				continue;
 			}
 
@@ -347,7 +335,7 @@ impl AiBoard {
 			// That's one branch of the game tree:
 			self.piece_add(c, offset, Players::Machine);
 
-			let m = self.min(offset, remaining - 1, local_alpha, beta).points;
+			let m = self.min(offset, remaining - 1, local_alpha, beta);
 
 			// Setting back the field to empty:
 			self.piece_remove(c, offset);
@@ -355,7 +343,6 @@ impl AiBoard {
 			// Fixing the max_v value if needed:
 			if m > max_v {
 				max_v = m;
-				column = c;
 
 				local_alpha = cmp::max(local_alpha, max_v);
 				if local_alpha >= beta {
@@ -364,7 +351,42 @@ impl AiBoard {
 			}
 		}
 
-		AiResults { points: max_v, position: column }
+		max_v
+	}
+
+	fn max_top(self: &mut AiBoard, remaining: u8) -> usize {
+		if remaining == 0 {
+			return INVALID_INDEX;
+		}
+
+		const DEFAULT_ALPHA: i8 = i8::MIN;
+		const DEFAULT_BETA: i8 = i8::MAX;
+
+		let mut max_v = i8::MIN;
+		let mut column = INVALID_INDEX;
+		for c in 0..BOARD_WIDTH {
+			if !self.column_available(c) {
+				continue;
+			}
+
+			let offset = self.piece_offset(c);
+
+			// On the empty field player Machine makes a move and calls Min
+			// That's one branch of the game tree:
+			self.piece_add(c, offset, Players::Machine);
+
+			let points = self.min(offset, remaining, DEFAULT_ALPHA, DEFAULT_BETA);
+
+			// Setting back the field to empty:
+			self.piece_remove(c, offset);
+
+			if points > max_v {
+				max_v = points;
+				column = c;
+			}
+		}
+
+		column
 	}
 
 	pub fn position(self: &mut AiBoard, remaining: u8, maximum_depth: u8) -> usize {
@@ -385,14 +407,11 @@ impl AiBoard {
 		//
 		// Hardcoding this is useful, on an empty board, there are 4,531,985,219,092 possibilities.
 		if remaining == 42 {
-			return 3;
+			3
+		} else {
+			// Process the best move for the AI.
+			self.max_top(cmp::min(remaining, maximum_depth))
 		}
-
-		const DEFAULT_ALPHA: i8 = i8::MIN;
-		const DEFAULT_BETA: i8 = i8::MAX;
-
-		// Process the best move for the AI.
-		self.max(UNDEFINED_LAST_MOVE, cmp::min(remaining, maximum_depth), DEFAULT_ALPHA, DEFAULT_BETA).position
 	}
 }
 

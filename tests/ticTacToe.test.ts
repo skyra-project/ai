@@ -1,19 +1,19 @@
-import { ticTacToe } from '../index';
+import { INVALID_INDEX, ticTacToe } from '../index';
 
 describe('TicTacToe', () => {
 	test('GIVEN no args THEN throws TypeError', () => {
 		// @ts-expect-error
-		expect(() => ticTacToe()).toThrow('data must be a typed array');
+		expect(() => ticTacToe()).toThrow('Get TypedArray info failed');
 	});
 
 	test('GIVEN null THEN throws TypeError', () => {
 		// @ts-expect-error
-		expect(() => ticTacToe(null)).toThrow('data must be a typed array');
+		expect(() => ticTacToe(null)).toThrow('Get TypedArray info failed');
 	});
 
 	test('GIVEN array THEN throws TypeError', () => {
 		// @ts-expect-error
-		expect(() => ticTacToe([0, 0, 0, 0, 0, 0, 0, 0, 0])).toThrow('data must be a typed array');
+		expect(() => ticTacToe([0, 0, 0, 0, 0, 0, 0, 0, 0])).toThrow('Get TypedArray info failed');
 	});
 
 	test('GIVEN Uint8Array with too little elements THEN throws TypeError', () => {
@@ -76,16 +76,16 @@ describe('TicTacToe', () => {
 		expect(ticTacToe(new Uint8Array([2, 0, 0, 0, 2, 0, 1, 1, 0]))).toEqual(8);
 	});
 
-	test('GIVEN filled board (loss) THEN returns -1', () => {
-		expect(ticTacToe(new Uint8Array([1, 1, 1, 1, 1, 1, 1, 1, 1]))).toEqual(-1);
+	test('GIVEN filled board (loss) THEN returns INVALID_INDEX', () => {
+		expect(ticTacToe(new Uint8Array([1, 1, 1, 1, 1, 1, 1, 1, 1]))).toEqual(INVALID_INDEX);
 	});
 
-	test('GIVEN filled board (draw) THEN returns -1', () => {
-		expect(ticTacToe(new Uint8Array([1, 2, 1, 1, 2, 1, 2, 1, 2]))).toEqual(-1);
+	test('GIVEN filled board (draw) THEN returns INVALID_INDEX', () => {
+		expect(ticTacToe(new Uint8Array([1, 2, 1, 1, 2, 1, 2, 1, 2]))).toEqual(INVALID_INDEX);
 	});
 
-	test('GIVEN filled board (win) THEN returns -1', () => {
-		expect(ticTacToe(new Uint8Array([2, 2, 2, 2, 2, 2, 2, 2, 2]))).toEqual(-1);
+	test('GIVEN filled board (win) THEN returns INVALID_INDEX', () => {
+		expect(ticTacToe(new Uint8Array([2, 2, 2, 2, 2, 2, 2, 2, 2]))).toEqual(INVALID_INDEX);
 	});
 });
 
