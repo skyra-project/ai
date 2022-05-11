@@ -5,6 +5,5 @@
 		"noEmit": true,
 		"types": ["vitest/globals"]
 	},
-	"include": ["./"],
-	"references": [{ "path": "../lib" }]
+	"include": ["./"]
 }
