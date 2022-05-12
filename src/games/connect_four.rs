@@ -441,8 +441,8 @@ macro_rules! isize_to_usize {
 	($input:expr, $max:expr) => {
 		(if $input < 0 {
 			Err(Error::from_reason(concat!(stringify!($input), " must be a positive number")))
-		} else if $input > ($max as i32) {
-			Err(Error::from_reason(concat!(stringify!($input), " must be lower than ", stringify!($max))))
+		} else if $input >= ($max as i32) {
+			Err(Error::from_reason(format!(concat!(stringify!($input), " must be lower than {}"), $max)))
 		} else {
 			Ok($input as usize)
 		})
@@ -476,7 +476,7 @@ impl ConnectFour {
 		} else {
 			Ok(Self {
 				cells: [Players::Unset; BOARD_CELLS],
-				remaining: [(BOARD_HEIGHT - 1) as u8; BOARD_WIDTH],
+				remaining: [BOARD_HEIGHT as u8; BOARD_WIDTH],
 				empty: BOARD_CELLS as u8,
 			})
 		}

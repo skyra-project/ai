@@ -53,5 +53,5 @@ pub fn tic_tac_toe_handler(v: Uint8Array) -> Result<i64, Error> {
 
 	let mut board = tic_tac_toe::AiBoard::new(cells);
 
-	Ok(board.position(remaining).try_into().unwrap())
+	Ok(board.get_best_move(remaining).try_into().unwrap())
 }

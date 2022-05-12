@@ -25,7 +25,7 @@ impl AiBoard {
 		Self { cells }
 	}
 
-	fn status(self: &AiBoard) -> Players {
+	fn status(&self) -> Players {
 		// Check rows
 		for i in (0..9).step_by(3) {
 			let a = self.cells[i];
@@ -63,27 +63,27 @@ impl AiBoard {
 		}
 	}
 
-	fn cell_available(self: &AiBoard, cell: usize) -> bool {
+	fn available(&self, cell: usize) -> bool {
 		debug_assert!(cell < BOARD_CELLS);
 
 		self.cells[cell] == Players::Unset
 	}
 
-	fn piece_add(self: &mut AiBoard, cell: usize, player: Players) {
+	fn add(&mut self, cell: usize, player: Players) {
 		debug_assert!(cell < BOARD_CELLS);
 		debug_assert!(self.cells[cell] == Players::Unset);
 
 		self.cells[cell] = player;
 	}
 
-	fn piece_remove(self: &mut AiBoard, cell: usize) {
+	fn remove(&mut self, cell: usize) {
 		debug_assert!(cell < BOARD_CELLS);
 		debug_assert!(self.cells[cell] != Players::Unset);
 
 		self.cells[cell] = Players::Unset;
 	}
 
-	fn min(self: &mut AiBoard, remaining: u8, alpha: i8, beta: i8) -> i8 {
+	fn min(&mut self, remaining: u8, alpha: i8, beta: i8) -> i8 {
 		if self.status() == Players::Machine {
 			return OUTCOME_MACHINE_WINS;
 		}
@@ -105,12 +105,12 @@ impl AiBoard {
 			if self.cells[cell] == Players::Unset {
 				// On the empty field player Player makes a move and calls Max
 				// That's one branch of the game tree:
-				self.piece_add(cell, Players::Player);
+				self.add(cell, Players::Player);
 
 				let m = self.max(remaining - 1, alpha, local_beta);
 
 				// Setting back the field to empty:
-				self.piece_remove(cell);
+				self.remove(cell);
 
 				// Fixing the min_v value if needed:
 				if m < min_v {
@@ -128,7 +128,7 @@ impl AiBoard {
 	}
 
 	/// Maximum is Players::Machine
-	fn max(self: &mut AiBoard, remaining: u8, alpha: i8, beta: i8) -> i8 {
+	fn max(&mut self, remaining: u8, alpha: i8, beta: i8) -> i8 {
 		if self.status() == Players::Player {
 			return OUTCOME_HUMAN_WINS;
 		}
@@ -150,12 +150,12 @@ impl AiBoard {
 			if self.cells[cell] == Players::Unset {
 				// On the empty field player Machine makes a move and calls Min
 				// That's one branch of the game tree:
-				self.piece_add(cell, Players::Machine);
+				self.add(cell, Players::Machine);
 
 				let m = self.min(remaining - 1, local_alpha, beta);
 
 				// Setting back the field to empty:
-				self.piece_remove(cell);
+				self.remove(cell);
 
 				// Fixing the max_v value if needed:
 				if m > max_v {
@@ -172,7 +172,7 @@ impl AiBoard {
 		max_v
 	}
 
-	fn max_top(self: &mut AiBoard, remaining: u8) -> usize {
+	fn max_top(&mut self, remaining: u8) -> usize {
 		if remaining == 0 {
 			return U_INVALID_INDEX;
 		}
@@ -183,18 +183,18 @@ impl AiBoard {
 		let mut max_v = i8::MIN;
 		let mut column = U_INVALID_INDEX;
 		for c in 0..BOARD_WIDTH {
-			if !self.cell_available(c) {
+			if !self.available(c) {
 				continue;
 			}
 
 			// On the empty field player Machine makes a move and calls Min
 			// That's one branch of the game tree:
-			self.piece_add(c, Players::Machine);
+			self.add(c, Players::Machine);
 
 			let points = self.min(remaining, DEFAULT_ALPHA, DEFAULT_BETA);
 
 			// Setting back the field to empty:
-			self.piece_remove(c);
+			self.remove(c);
 
 			if points > max_v {
 				max_v = points;
@@ -211,7 +211,7 @@ impl AiBoard {
 	}
 
 	/// Returns the optimal move from the AI, -1 if no move was possible.
-	pub fn position(self: &mut AiBoard, remaining: u8) -> usize {
+	pub fn get_best_move(&mut self, remaining: u8) -> usize {
 		// If remaining is 9, then the board is empty.
 		//
 		// Strategically speaking, the middle position in TicTacToe is always the best,
