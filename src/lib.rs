@@ -5,11 +5,12 @@ extern crate napi_derive;
 
 mod games;
 
-use games::{connect_four, tic_tac_toe};
-use napi::bindgen_prelude::Uint8Array;
+use games::tic_tac_toe;
+use napi::bindgen_prelude::{ToNapiValue, Uint8Array};
 use napi::Error;
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[napi]
+#[derive(Debug, PartialEq)]
 pub enum Players {
 	Unset,
 	Player,
@@ -29,31 +30,20 @@ impl TryFrom<u8> for Players {
 	}
 }
 
+impl Into<u8> for Players {
+	fn into(self) -> u8 {
+		match self {
+			Players::Unset => 0,
+			Players::Player => 1,
+			Players::Machine => 2,
+		}
+	}
+}
+
 pub const U_INVALID_INDEX: usize = 255;
 
 #[napi]
 pub const INVALID_INDEX: i64 = U_INVALID_INDEX as i64;
-
-#[napi(js_name = "connectFour")]
-pub fn connect_four_handler(v: Uint8Array, maximum_depth: Option<u32>) -> Result<i64, Error> {
-	let input = v.to_vec();
-	if input.len() != connect_four::BOARD_CELLS {
-		return Err(Error::from_reason("data must have exactly 42 numbers"));
-	}
-
-	let mut cells: connect_four::AiCells = [Players::Unset; connect_four::BOARD_CELLS];
-	let mut remaining: u8 = connect_four::BOARD_CELLS.try_into().unwrap();
-	for i in 0..connect_four::BOARD_CELLS {
-		cells[i] = Players::try_from(v[i]).map_err(Error::from_reason)?;
-		if cells[i] != Players::Unset {
-			remaining -= 1;
-		}
-	}
-
-	let mut board = connect_four::AiBoard::new(cells);
-
-	Ok(board.position(remaining, maximum_depth.unwrap_or(5).try_into().unwrap()).try_into().unwrap())
-}
 
 #[napi(js_name = "ticTacToe")]
 pub fn tic_tac_toe_handler(v: Uint8Array) -> Result<i64, Error> {

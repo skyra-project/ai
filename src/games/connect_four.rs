@@ -1,4 +1,6 @@
 use crate::{Players, U_INVALID_INDEX};
+use napi::bindgen_prelude::Uint8Array;
+use napi::{Error, Result};
 use std::cmp;
 
 pub const BOARD_WIDTH: usize = 7;
@@ -53,13 +55,15 @@ fn compare(a: Players, b: Players, c: Players, d: Players) -> bool {
 pub type AiCells = [Players; BOARD_CELLS];
 pub type AiRemaining = [u8; BOARD_WIDTH];
 
-pub struct AiBoard {
-	pub cells: AiCells,
-	pub remaining: AiRemaining,
+#[napi(js_name = "ConnectFour")]
+pub struct ConnectFour {
+	cells: AiCells,
+	remaining: AiRemaining,
+	empty: u8,
 }
 
-impl AiBoard {
-	pub fn new(cells: AiCells) -> Self {
+impl ConnectFour {
+	fn new(cells: AiCells) -> Self {
 		let mut remaining = [0; BOARD_WIDTH];
 		for x in 0..BOARD_WIDTH {
 			let mut y = 0;
@@ -70,10 +74,12 @@ impl AiBoard {
 			remaining[x] = y as u8;
 		}
 
-		Self { cells, remaining }
+		let empty: u8 = remaining.iter().sum();
+
+		Self { cells, remaining, empty }
 	}
 
-	unsafe fn check_4(self: &AiBoard, cell: usize, a: isize, b: isize, c: isize, d: isize) -> bool {
+	unsafe fn check_4(&self, cell: usize, a: isize, b: isize, c: isize, d: isize) -> bool {
 		debug_assert!(cell as isize + a >= 0);
 		debug_assert!(cell as isize + d < BOARD_CELLS as isize);
 		debug_assert!(self.cells[cell] != Players::Unset);
@@ -88,7 +94,7 @@ impl AiBoard {
 		compare(ca, cb, cc, cd)
 	}
 
-	unsafe fn check_5(self: &AiBoard, cell: usize, a: isize, b: isize, c: isize, d: isize, e: isize) -> bool {
+	unsafe fn check_5(&self, cell: usize, a: isize, b: isize, c: isize, d: isize, e: isize) -> bool {
 		debug_assert!(cell as isize + a >= 0);
 		debug_assert!(cell as isize + e < BOARD_CELLS as isize);
 		debug_assert!(self.cells[cell] != Players::Unset);
@@ -105,7 +111,7 @@ impl AiBoard {
 	}
 
 	#[allow(clippy::too_many_arguments)]
-	unsafe fn check_6(self: &AiBoard, cell: usize, a: isize, b: isize, c: isize, d: isize, e: isize, f: isize) -> bool {
+	unsafe fn check_6(&self, cell: usize, a: isize, b: isize, c: isize, d: isize, e: isize, f: isize) -> bool {
 		debug_assert!(cell as isize + a >= 0);
 		debug_assert!(cell as isize + f < BOARD_CELLS as isize);
 		debug_assert!(self.cells[cell] != Players::Unset);
@@ -124,7 +130,7 @@ impl AiBoard {
 
 	#[allow(clippy::too_many_arguments)]
 	unsafe fn check_7(
-		self: &AiBoard,
+		&self,
 		cell: usize,
 		a: isize,
 		b: isize,
@@ -153,7 +159,7 @@ impl AiBoard {
 
 	#[allow(clippy::too_many_arguments)]
 	unsafe fn status_row(
-		self: &AiBoard,
+		&self,
 		mask: u8,
 		cell: usize,
 		l1: isize,
@@ -187,7 +193,7 @@ impl AiBoard {
 		}
 	}
 
-	unsafe fn status(self: &AiBoard, last_cell_offset: usize) -> bool {
+	unsafe fn status(&self, last_cell_offset: usize) -> bool {
 		debug_assert!(last_cell_offset < BOARD_CELLS);
 		debug_assert!(self.cells[last_cell_offset] != Players::Unset);
 
@@ -230,20 +236,20 @@ impl AiBoard {
 			|| self.status_row(AVAILABLE_DIAGONAL_BL[last_cell_offset], last_cell_offset, BL1, BL2, BL3, TR1, TR2, TR3)
 	}
 
-	fn column_available(self: &AiBoard, column: usize) -> bool {
+	fn available(&self, column: usize) -> bool {
 		debug_assert!(column < BOARD_WIDTH);
 
 		self.remaining[column] != 0
 	}
 
-	fn piece_offset(self: &AiBoard, column: usize) -> usize {
+	fn piece_offset(&self, column: usize) -> usize {
 		debug_assert!(column < BOARD_WIDTH);
 		debug_assert!(self.remaining[column] != 0);
 
 		((self.remaining[column] as usize - 1) * BOARD_WIDTH) + column
 	}
 
-	fn piece_add(self: &mut AiBoard, column: usize, offset: usize, player: Players) {
+	fn add(&mut self, column: usize, offset: usize, player: Players) {
 		debug_assert!(column < BOARD_WIDTH);
 		debug_assert!(self.remaining[column] != 0);
 		debug_assert!(offset < BOARD_CELLS);
@@ -253,7 +259,7 @@ impl AiBoard {
 		self.cells[offset] = player;
 	}
 
-	fn piece_remove(self: &mut AiBoard, column: usize, offset: usize) {
+	fn piece_remove(&mut self, column: usize, offset: usize) {
 		debug_assert!(column < BOARD_WIDTH);
 		debug_assert!(self.remaining[column] != BOARD_HEIGHT as u8);
 		debug_assert!(offset < BOARD_CELLS);
@@ -264,7 +270,7 @@ impl AiBoard {
 	}
 
 	/// Minimum is `Players::Player`
-	fn min(self: &mut AiBoard, last_cell_offset: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
+	fn min(&mut self, last_cell_offset: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
 		unsafe {
 			if self.status(last_cell_offset) {
 				return OUTCOME_MACHINE_WINS;
@@ -285,7 +291,7 @@ impl AiBoard {
 		let mut local_beta = beta;
 
 		for c in 0..BOARD_WIDTH {
-			if !self.column_available(c) {
+			if !self.available(c) {
 				continue;
 			}
 
@@ -293,7 +299,7 @@ impl AiBoard {
 
 			// On the empty field player Player makes a move and calls Max
 			// That's one branch of the game tree:
-			self.piece_add(c, offset, Players::Player);
+			self.add(c, offset, Players::Player);
 
 			let m = self.max(offset, remaining - 1, alpha, local_beta);
 
@@ -315,7 +321,7 @@ impl AiBoard {
 	}
 
 	/// Maximum is `Players::Machine`
-	fn max(self: &mut AiBoard, last_cell_offset: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
+	fn max(&mut self, last_cell_offset: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
 		unsafe {
 			if self.status(last_cell_offset) {
 				return OUTCOME_HUMAN_WINS;
@@ -336,7 +342,7 @@ impl AiBoard {
 		let mut local_alpha = alpha;
 
 		for c in 0..BOARD_WIDTH {
-			if !self.column_available(c) {
+			if !self.available(c) {
 				continue;
 			}
 
@@ -344,7 +350,7 @@ impl AiBoard {
 
 			// On the empty field player Machine makes a move and calls Min
 			// That's one branch of the game tree:
-			self.piece_add(c, offset, Players::Machine);
+			self.add(c, offset, Players::Machine);
 
 			let m = self.min(offset, remaining - 1, local_alpha, beta);
 
@@ -365,7 +371,7 @@ impl AiBoard {
 		max_v
 	}
 
-	fn max_top(self: &mut AiBoard, remaining: u8) -> usize {
+	fn max_top(&mut self, remaining: u8) -> usize {
 		if remaining == 0 {
 			return U_INVALID_INDEX;
 		}
@@ -376,7 +382,7 @@ impl AiBoard {
 		let mut max_v = i8::MIN;
 		let mut column = U_INVALID_INDEX;
 		for c in 0..BOARD_WIDTH {
-			if !self.column_available(c) {
+			if !self.available(c) {
 				continue;
 			}
 
@@ -384,7 +390,7 @@ impl AiBoard {
 
 			// On the empty field player Machine makes a move and calls Min
 			// That's one branch of the game tree:
-			self.piece_add(c, offset, Players::Machine);
+			self.add(c, offset, Players::Machine);
 
 			let points = self.min(offset, remaining, DEFAULT_ALPHA, DEFAULT_BETA);
 
@@ -405,7 +411,7 @@ impl AiBoard {
 		column
 	}
 
-	pub fn position(self: &mut AiBoard, remaining: u8, maximum_depth: u8) -> usize {
+	fn get_best_move(&mut self, maximum_depth: u8) -> usize {
 		// If remaining is 42, then the board is empty.
 		//
 		// Strategically speaking, the middle position in ConnectFour is always the best,
@@ -422,12 +428,86 @@ impl AiBoard {
 		// The center is 4, therefore, we return this number.
 		//
 		// Hardcoding this is useful, on an empty board, there are 4,531,985,219,092 possibilities.
-		if remaining == 42 {
+		if self.empty == 42 {
 			3
 		} else {
 			// Process the best move for the AI.
-			self.max_top(cmp::min(remaining, maximum_depth))
+			self.max_top(cmp::min(self.empty, maximum_depth))
 		}
+	}
+}
+
+macro_rules! isize_to_usize {
+	($input:expr, $max:expr) => {
+		(if $input < 0 {
+			Err(Error::from_reason(concat!(stringify!($input), " must be a positive number")))
+		} else if $input > ($max as i32) {
+			Err(Error::from_reason(concat!(stringify!($input), " must be lower than ", stringify!($max))))
+		} else {
+			Ok($input as usize)
+		})
+	};
+}
+
+macro_rules! napi_assert {
+	($input:expr) => {
+		(if !$input {
+			return Err(Error::from_reason(concat!("The assertion [", stringify!($input), "] failed")));
+		})
+	};
+}
+
+#[napi]
+impl ConnectFour {
+	#[napi(constructor)]
+	pub fn default() -> Self {
+		Self {
+			cells: [Players::Unset; BOARD_CELLS],
+			remaining: [(BOARD_HEIGHT - 1) as u8; BOARD_WIDTH],
+			empty: BOARD_CELLS as u8,
+		}
+	}
+
+	// TODO: Unify with constructor
+	#[napi(factory)]
+	pub fn with_cells(values: Uint8Array) -> Result<Self> {
+		let input = values.to_vec();
+		if input.len() != BOARD_CELLS {
+			return Err(Error::from_reason("data must have exactly 42 numbers"));
+		}
+
+		let mut cells: AiCells = [Players::Unset; BOARD_CELLS];
+		for i in 0..BOARD_CELLS {
+			cells[i] = Players::try_from(values[i]).map_err(Error::from_reason)?;
+		}
+
+		Ok(ConnectFour::new(cells))
+	}
+
+	#[napi(js_name = "getBoard")]
+	pub fn js_get_board(&self) -> Uint8Array {
+		Uint8Array::new(self.cells.map(|v| v.into()).to_vec())
+	}
+
+	#[napi(js_name = "available")]
+	pub fn js_available(&self, column: i32) -> Result<bool> {
+		Ok(self.available(isize_to_usize!(column, BOARD_WIDTH)?))
+	}
+
+	#[napi(js_name = "add")]
+	pub fn js_add(&mut self, column: i32, player: Players) -> Result<bool> {
+		let c = isize_to_usize!(column, BOARD_WIDTH)?;
+		napi_assert!(self.remaining[c] != 0);
+
+		let offset = self.piece_offset(c);
+		self.add(c, offset, player);
+		self.empty -= 1;
+		Ok(unsafe { self.status(offset) })
+	}
+
+	#[napi(js_name = "getBestMove")]
+	pub fn js_get_best_move(&mut self, depth: Option<i32>) -> Result<i32> {
+		Ok(self.get_best_move(depth.unwrap_or(5).try_into().unwrap()).try_into().unwrap())
 	}
 }
 
@@ -475,7 +555,7 @@ mod tests {
 		fn test_empty() {
 			let cells = create_cells!();
 			let remaining: AiRemaining = [6; 7];
-			let board = AiBoard::new(cells);
+			let board = ConnectFour::new(cells);
 
 			assert_eq!(board.cells, cells);
 			assert_eq!(board.remaining, remaining);
@@ -485,7 +565,7 @@ mod tests {
 		fn test_row_filled() {
 			let cells = create_cells!(35, 36, 37, 38, 39, 40, 41);
 			let remaining: AiRemaining = [5; 7];
-			let board = AiBoard::new(cells);
+			let board = ConnectFour::new(cells);
 
 			assert_eq!(board.cells, cells);
 			assert_eq!(board.remaining, remaining);
@@ -495,7 +575,7 @@ mod tests {
 		fn test_column_filled() {
 			let cells = create_cells!(0, 7, 14, 21, 28, 35);
 			let remaining: AiRemaining = [0, 6, 6, 6, 6, 6, 6];
-			let board = AiBoard::new(cells);
+			let board = ConnectFour::new(cells);
 
 			assert_eq!(board.cells, cells);
 			assert_eq!(board.remaining, remaining);
@@ -510,7 +590,7 @@ mod tests {
 				#[test]
 				#[should_panic]
 				fn $name() {
-					let board = AiBoard::new($cells);
+					let board = ConnectFour::new($cells);
 
 					unsafe {
 						board.check_4($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3);
@@ -527,7 +607,7 @@ mod tests {
 
 		#[test]
 		fn test_fails() {
-			let board = AiBoard::new(create_cells!(0, 2, 3, 4));
+			let board = ConnectFour::new(create_cells!(0, 2, 3, 4));
 
 			unsafe {
 				assert!(!board.check_4(0, 0, 1, 2, 3));
@@ -539,7 +619,7 @@ mod tests {
 			$(
 				#[test]
 				fn $name() {
-					let board = AiBoard::new(create_cells!(0, 1, 2, 3, 4));
+					let board = ConnectFour::new(create_cells!(0, 1, 2, 3, 4));
 
 					unsafe {
 						assert!(board.check_4($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3));
@@ -565,7 +645,7 @@ mod tests {
 				#[test]
 				#[should_panic]
 				fn $name() {
-					let board = AiBoard::new($cells);
+					let board = ConnectFour::new($cells);
 
 					unsafe {
 						board.check_5($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4);
@@ -582,7 +662,7 @@ mod tests {
 
 		#[test]
 		fn test_fails() {
-			let board = AiBoard::new(create_cells!(0, 2, 3, 4));
+			let board = ConnectFour::new(create_cells!(0, 2, 3, 4));
 
 			unsafe {
 				assert!(!board.check_5(2, -1, 0, 1, 2, 3));
@@ -594,7 +674,7 @@ mod tests {
 			$(
 				#[test]
 				fn $name() {
-					let board = AiBoard::new(create_cells!(0, 1, 2, 3));
+					let board = ConnectFour::new(create_cells!(0, 1, 2, 3));
 
 					unsafe {
 						assert!(board.check_5($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4));
@@ -620,7 +700,7 @@ mod tests {
 				#[test]
 				#[should_panic]
 				fn $name() {
-					let board = AiBoard::new($cells);
+					let board = ConnectFour::new($cells);
 
 					unsafe {
 						board.check_6($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4, $offsets.5);
@@ -637,7 +717,7 @@ mod tests {
 
 		#[test]
 		fn test_fails() {
-			let board = AiBoard::new(create_cells!(0, 2, 3, 4));
+			let board = ConnectFour::new(create_cells!(0, 2, 3, 4));
 
 			unsafe {
 				assert!(!board.check_6(2, -2, -1, 0, 1, 2, 3));
@@ -649,7 +729,7 @@ mod tests {
 			$(
 				#[test]
 				fn $name() {
-					let board = AiBoard::new(create_cells!(0, 1, 2, 3, 4));
+					let board = ConnectFour::new(create_cells!(0, 1, 2, 3, 4));
 
 					unsafe {
 						assert!(board.check_6($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4, $offsets.5));
@@ -675,7 +755,7 @@ mod tests {
 				#[test]
 				#[should_panic]
 				fn $name() {
-					let board = AiBoard::new($cells);
+					let board = ConnectFour::new($cells);
 
 					unsafe {
 						board.check_7($cell, -3, -2, -1, 0, 1, 2, 3);
@@ -692,7 +772,7 @@ mod tests {
 
 		#[test]
 		fn test_fails() {
-			let board = AiBoard::new(create_cells!(0, 2, 3, 4));
+			let board = ConnectFour::new(create_cells!(0, 2, 3, 4));
 
 			unsafe {
 				assert!(!board.check_7(3, -3, -2, -1, 0, 1, 2, 3));
@@ -704,7 +784,7 @@ mod tests {
 			$(
 				#[test]
 				fn $name() {
-					let board = AiBoard::new(create_cells!(0, 1, 2, 3, 4));
+					let board = ConnectFour::new(create_cells!(0, 1, 2, 3, 4));
 
 					unsafe {
 						assert!(board.check_7($last_column, -3, -2, -1, 0, 1, 2, 3));
@@ -728,7 +808,7 @@ mod tests {
 				#[test]
 				#[should_panic]
 				fn $name() {
-					let board = AiBoard::new($cells);
+					let board = ConnectFour::new($cells);
 
 					unsafe {
 						board.status($last_cell_offset);
@@ -746,7 +826,7 @@ mod tests {
 			($($name:ident: [$cells:expr, $last_cell_offset:expr],)*) => ($(
 				#[test]
 				fn $name() {
-					let board = AiBoard::new($cells);
+					let board = ConnectFour::new($cells);
 
 					unsafe {
 						assert!(!board.status($last_cell_offset));
@@ -776,7 +856,7 @@ mod tests {
 			($($name:ident: [$cells:expr, $last_cell_offset:expr],)*) => ($(
 				#[test]
 				fn $name() {
-					let board = AiBoard::new($cells);
+					let board = ConnectFour::new($cells);
 
 					unsafe {
 						assert!(board.status($last_cell_offset));
@@ -804,20 +884,20 @@ mod tests {
 		}
 	}
 
-	mod column_available {
+	mod available {
 		use super::super::*;
 
 		#[test]
 		#[should_panic]
 		fn test_out_of_range_over() {
-			let board = AiBoard::new(create_cells!());
-			board.column_available(7);
+			let board = ConnectFour::new(create_cells!());
+			board.available(7);
 		}
 
 		#[test]
 		fn test_0() {
-			let board = AiBoard::new(create_cells!(0, 7, 14, 21, 28, 35));
-			assert!(!board.column_available(0));
+			let board = ConnectFour::new(create_cells!(0, 7, 14, 21, 28, 35));
+			assert!(!board.available(0));
 		}
 
 		macro_rules! test_true {
@@ -825,8 +905,8 @@ mod tests {
 			$(
 				#[test]
 				fn $name() {
-					let board = AiBoard::new($cells);
-					assert!(board.column_available(0));
+					let board = ConnectFour::new($cells);
+					assert!(board.available(0));
 				}
 			)*
 			}
@@ -850,7 +930,7 @@ mod tests {
 				#[test]
 				#[should_panic]
 				fn $name() {
-					let board = AiBoard::new($cells);
+					let board = ConnectFour::new($cells);
 					board.piece_offset($column);
 				}
 			)*);
@@ -866,7 +946,7 @@ mod tests {
 			$(
 				#[test]
 				fn $name() {
-					let board = AiBoard::new($cells);
+					let board = ConnectFour::new($cells);
 					assert_eq!(board.piece_offset(0), $offset);
 				}
 			)*
@@ -884,7 +964,7 @@ mod tests {
 		}
 	}
 
-	mod piece_add {
+	mod add {
 		use super::super::*;
 
 		macro_rules! test_panic {
@@ -892,8 +972,8 @@ mod tests {
 				#[test]
 				#[should_panic]
 				fn $name() {
-					let mut board = AiBoard::new($cells);
-					board.piece_add($column, $offset, Players::Player);
+					let mut board = ConnectFour::new($cells);
+					board.add($column, $offset, Players::Player);
 				}
 			)*);
 		}
@@ -908,8 +988,8 @@ mod tests {
 		#[test]
 		#[should_panic]
 		fn test_0() {
-			let mut board = AiBoard::new(create_cells!(0, 7, 14, 21, 28, 35));
-			board.piece_add(0, 0, Players::Player);
+			let mut board = ConnectFour::new(create_cells!(0, 7, 14, 21, 28, 35));
+			board.add(0, 0, Players::Player);
 		}
 
 		macro_rules! generate_test {
@@ -917,8 +997,8 @@ mod tests {
 			$(
 				#[test]
 				fn $name() {
-					let mut board = AiBoard::new($cells);
-					board.piece_add(0, $offset, Players::Player);
+					let mut board = ConnectFour::new($cells);
+					board.add(0, $offset, Players::Player);
 
 					assert_eq!(board.cells[$offset], Players::Player);
 				}
@@ -944,7 +1024,7 @@ mod tests {
 				#[test]
 				#[should_panic]
 				fn $name() {
-					let mut board = AiBoard::new($cells);
+					let mut board = ConnectFour::new($cells);
 					board.piece_remove($column, $offset);
 				}
 			)*);
@@ -961,7 +1041,7 @@ mod tests {
 			($($name:ident: [$cells:expr, $offset:expr],)*) => ($(
 				#[test]
 				fn $name() {
-					let mut board = AiBoard::new($cells);
+					let mut board = ConnectFour::new($cells);
 					board.piece_remove(0, $offset);
 
 					assert_eq!(board.cells[$offset], Players::Unset);

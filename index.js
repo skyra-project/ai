@@ -218,8 +218,9 @@ if (!nativeBinding) {
 	throw new Error(`Failed to load native binding`);
 }
 
-const { INVALID_INDEX, connectFour, ticTacToe } = nativeBinding;
+const { ConnectFour, Players, INVALID_INDEX, ticTacToe } = nativeBinding;
 
+module.exports.ConnectFour = ConnectFour;
+module.exports.Players = Players;
 module.exports.INVALID_INDEX = INVALID_INDEX;
-module.exports.connectFour = connectFour;
 module.exports.ticTacToe = ticTacToe;
