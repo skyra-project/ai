@@ -11,8 +11,7 @@ export const enum Players {
 export const INVALID_INDEX: number;
 export function ticTacToe(v: Uint8Array): number;
 export class ConnectFour {
-	constructor();
-	static withCells(values: Uint8Array): ConnectFour;
+	constructor(values?: Uint8Array | undefined | null);
 	getBoard(): Uint8Array;
 	available(column: number): boolean;
 	add(column: number, player: Players): boolean;

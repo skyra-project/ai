@@ -259,7 +259,7 @@ impl ConnectFour {
 		self.cells[offset] = player;
 	}
 
-	fn piece_remove(&mut self, column: usize, offset: usize) {
+	fn remove(&mut self, column: usize, offset: usize) {
 		debug_assert!(column < BOARD_WIDTH);
 		debug_assert!(self.remaining[column] != BOARD_HEIGHT as u8);
 		debug_assert!(offset < BOARD_CELLS);
@@ -304,7 +304,7 @@ impl ConnectFour {
 			let m = self.max(offset, remaining - 1, alpha, local_beta);
 
 			// Setting back the field to empty:
-			self.piece_remove(c, offset);
+			self.remove(c, offset);
 
 			// Fixing the min_v value if needed:
 			if m < min_v {
@@ -355,7 +355,7 @@ impl ConnectFour {
 			let m = self.min(offset, remaining - 1, local_alpha, beta);
 
 			// Setting back the field to empty:
-			self.piece_remove(c, offset);
+			self.remove(c, offset);
 
 			// Fixing the max_v value if needed:
 			if m > max_v {
@@ -395,7 +395,7 @@ impl ConnectFour {
 			let points = self.min(offset, remaining, DEFAULT_ALPHA, DEFAULT_BETA);
 
 			// Setting back the field to empty:
-			self.piece_remove(c, offset);
+			self.remove(c, offset);
 
 			if points > max_v {
 				max_v = points;
@@ -460,33 +460,31 @@ macro_rules! napi_assert {
 #[napi]
 impl ConnectFour {
 	#[napi(constructor)]
-	pub fn default() -> Self {
-		Self {
-			cells: [Players::Unset; BOARD_CELLS],
-			remaining: [(BOARD_HEIGHT - 1) as u8; BOARD_WIDTH],
-			empty: BOARD_CELLS as u8,
-		}
-	}
+	pub fn js_new(values: Option<Uint8Array>) -> Result<Self> {
+		if let Some(v) = values {
+			let input = v.to_vec();
+			if input.len() != BOARD_CELLS {
+				return Err(Error::from_reason("data must have exactly 42 numbers"));
+			}
 
-	// TODO: Unify with constructor
-	#[napi(factory)]
-	pub fn with_cells(values: Uint8Array) -> Result<Self> {
-		let input = values.to_vec();
-		if input.len() != BOARD_CELLS {
-			return Err(Error::from_reason("data must have exactly 42 numbers"));
-		}
+			let mut cells: AiCells = [Players::Unset; BOARD_CELLS];
+			for i in 0..BOARD_CELLS {
+				cells[i] = Players::try_from(input[i]).map_err(Error::from_reason)?;
+			}
 
-		let mut cells: AiCells = [Players::Unset; BOARD_CELLS];
-		for i in 0..BOARD_CELLS {
-			cells[i] = Players::try_from(values[i]).map_err(Error::from_reason)?;
+			Ok(ConnectFour::new(cells))
+		} else {
+			Ok(Self {
+				cells: [Players::Unset; BOARD_CELLS],
+				remaining: [(BOARD_HEIGHT - 1) as u8; BOARD_WIDTH],
+				empty: BOARD_CELLS as u8,
+			})
 		}
-
-		Ok(ConnectFour::new(cells))
 	}
 
 	#[napi(js_name = "getBoard")]
 	pub fn js_get_board(&self) -> Uint8Array {
-		Uint8Array::new(self.cells.map(|v| v.into()).to_vec())
+		Uint8Array::new(self.cells.map(|v| v as u8).to_vec())
 	}
 
 	#[napi(js_name = "available")]
@@ -1016,7 +1014,7 @@ mod tests {
 		}
 	}
 
-	mod piece_remove {
+	mod remove {
 		use super::super::*;
 
 		macro_rules! test_panic {
@@ -1025,7 +1023,7 @@ mod tests {
 				#[should_panic]
 				fn $name() {
 					let mut board = ConnectFour::new($cells);
-					board.piece_remove($column, $offset);
+					board.remove($column, $offset);
 				}
 			)*);
 		}
@@ -1042,7 +1040,7 @@ mod tests {
 				#[test]
 				fn $name() {
 					let mut board = ConnectFour::new($cells);
-					board.piece_remove(0, $offset);
+					board.remove(0, $offset);
 
 					assert_eq!(board.cells[$offset], Players::Unset);
 				}

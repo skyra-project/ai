@@ -30,16 +30,6 @@ impl TryFrom<u8> for Players {
 	}
 }
 
-impl Into<u8> for Players {
-	fn into(self) -> u8 {
-		match self {
-			Players::Unset => 0,
-			Players::Player => 1,
-			Players::Machine => 2,
-		}
-	}
-}
-
 pub const U_INVALID_INDEX: usize = 255;
 
 #[napi]
