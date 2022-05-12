@@ -61,7 +61,7 @@ pub fn tic_tac_toe_handler(v: Uint8Array) -> Result<i64, Error> {
 
 #[macro_export]
 macro_rules! many_eq {
-	($x:expr, $y:expr $(,$rest:expr)*) => {
+	($x:expr, $y:expr $(,$rest:expr)* $(,)?) => {
 		$x == $y && many_eq!($y $(,$rest)*)
 	};
 	($x:expr) => { true };
