@@ -64,6 +64,8 @@ impl AiBoard {
 	}
 
 	fn cell_available(self: &AiBoard, cell: usize) -> bool {
+		debug_assert!(cell < BOARD_CELLS);
+
 		self.cells[cell] == Players::Unset
 	}
 
