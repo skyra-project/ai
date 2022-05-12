@@ -62,14 +62,16 @@ pub fn tic_tac_toe_handler(v: Uint8Array) -> Result<i64, Error> {
 		return Err(Error::from_reason("data must have exactly 9 numbers"));
 	}
 
-	let mut board: tic_tac_toe::AiBoard = [Players::Unset; tic_tac_toe::BOARD_CELLS];
+	let mut cells: tic_tac_toe::AiCells = [Players::Unset; tic_tac_toe::BOARD_CELLS];
 	let mut remaining: u8 = tic_tac_toe::BOARD_CELLS.try_into().unwrap();
 	for i in 0..tic_tac_toe::BOARD_CELLS {
-		board[i] = Players::try_from(v[i]).map_err(Error::from_reason)?;
-		if board[i] != Players::Unset {
+		cells[i] = Players::try_from(v[i]).map_err(Error::from_reason)?;
+		if cells[i] != Players::Unset {
 			remaining -= 1;
 		}
 	}
 
-	Ok(tic_tac_toe::position(&mut board, remaining).try_into().unwrap())
+	let mut board = tic_tac_toe::AiBoard::new(cells);
+
+	Ok(board.position(remaining).try_into().unwrap())
 }

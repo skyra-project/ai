@@ -281,7 +281,7 @@ impl AiBoard {
 		//  1 - loss
 		//
 		// We're initially setting it to 2 as worse than the worst case:
-		let mut min_v = i8::MIN;
+		let mut min_v = i8::MAX;
 		let mut local_beta = beta;
 
 		for c in 0..BOARD_WIDTH {
