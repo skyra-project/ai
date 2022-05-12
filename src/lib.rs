@@ -3,7 +3,10 @@
 #[macro_use]
 extern crate napi_derive;
 
-mod games;
+mod games {
+	pub mod connect_four;
+	pub mod tic_tac_toe;
+}
 
 use games::tic_tac_toe;
 use napi::bindgen_prelude::{ToNapiValue, Uint8Array};
@@ -54,4 +57,12 @@ pub fn tic_tac_toe_handler(v: Uint8Array) -> Result<i64, Error> {
 	let mut board = tic_tac_toe::AiBoard::new(cells);
 
 	Ok(board.get_best_move(remaining).try_into().unwrap())
+}
+
+#[macro_export]
+macro_rules! many_eq {
+	($x:expr, $y:expr $(,$rest:expr)*) => {
+		$x == $y && many_eq!($y $(,$rest)*)
+	};
+	($x:expr) => { true };
 }

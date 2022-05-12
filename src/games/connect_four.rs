@@ -1,4 +1,4 @@
-use crate::{Players, U_INVALID_INDEX};
+use crate::{many_eq, Players, U_INVALID_INDEX};
 use napi::bindgen_prelude::Uint8Array;
 use napi::{Error, Result};
 use std::cmp;
@@ -47,11 +47,6 @@ const AVAILABLE_DIAGONAL_BL: [u8; BOARD_CELLS] = [
 	0b0011, 0b0011, 0b0011, 0b0011, 0b0010, 0b0001, 0b0000,
 ];
 
-#[inline(always)]
-fn compare(a: Players, b: Players, c: Players, d: Players) -> bool {
-	a == b && b == c && c == d
-}
-
 pub type AiCells = [Players; BOARD_CELLS];
 pub type AiRemaining = [u8; BOARD_WIDTH];
 
@@ -91,7 +86,7 @@ impl ConnectFour {
 		let cc = *ptr.offset(c);
 		let cd = *ptr.offset(d);
 
-		compare(ca, cb, cc, cd)
+		many_eq!(ca, cb, cc, cd)
 	}
 
 	unsafe fn check_5(&self, cell: usize, a: isize, b: isize, c: isize, d: isize, e: isize) -> bool {
@@ -107,7 +102,7 @@ impl ConnectFour {
 		let cd = *ptr.offset(d);
 		let ce = *ptr.offset(e);
 
-		compare(ca, cb, cc, cd) || compare(cb, cc, cd, ce)
+		many_eq!(ca, cb, cc, cd) || many_eq!(cb, cc, cd, ce)
 	}
 
 	#[allow(clippy::too_many_arguments)]
@@ -125,7 +120,7 @@ impl ConnectFour {
 		let ce = *ptr.offset(e);
 		let cf = *ptr.offset(f);
 
-		compare(ca, cb, cc, cd) || compare(cb, cc, cd, ce) || compare(cc, cd, ce, cf)
+		many_eq!(ca, cb, cc, cd) || many_eq!(cb, cc, cd, ce) || many_eq!(cc, cd, ce, cf)
 	}
 
 	#[allow(clippy::too_many_arguments)]
@@ -154,7 +149,7 @@ impl ConnectFour {
 		let cf = *ptr.offset(f);
 		let cg = *ptr.offset(g);
 
-		compare(ca, cb, cc, cd) || compare(cb, cc, cd, ce) || compare(cc, cd, ce, cf) || compare(cd, ce, cf, cg)
+		many_eq!(ca, cb, cc, cd) || many_eq!(cb, cc, cd, ce) || many_eq!(cc, cd, ce, cf) || many_eq!(cd, ce, cf, cg)
 	}
 
 	#[allow(clippy::too_many_arguments)]
@@ -512,10 +507,11 @@ impl ConnectFour {
 #[cfg(test)]
 mod tests {
 	use super::*;
+	use crate::many_eq;
 
 	#[test]
 	fn test_compare_same() {
-		assert!(compare(Players::Player, Players::Player, Players::Player, Players::Player));
+		assert!(many_eq!(Players::Player, Players::Player, Players::Player, Players::Player));
 	}
 
 	macro_rules! compare_different {
@@ -524,7 +520,7 @@ mod tests {
 			#[test]
 			fn $name() {
 				let (a, b, c, d) = $value;
-				assert!(!compare(a, b, c, d));
+				assert!(!many_eq!(a, b, c, d));
 			}
 		)*
 		}

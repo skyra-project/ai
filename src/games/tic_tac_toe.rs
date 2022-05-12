@@ -1,4 +1,4 @@
-use crate::{Players, U_INVALID_INDEX};
+use crate::{many_eq, Players, U_INVALID_INDEX};
 use std::cmp;
 
 pub const BOARD_WIDTH: usize = 3;
@@ -10,11 +10,6 @@ const OUTCOME_MACHINE_WINS: i8 = 20;
 const OUTCOME_DRAW: i8 = 0;
 
 pub type AiCells = [Players; BOARD_CELLS];
-
-#[inline(always)]
-fn compare(a: Players, b: Players, c: Players) -> bool {
-	a == b && b == c
-}
 
 pub struct AiBoard {
 	pub cells: AiCells,
@@ -33,7 +28,7 @@ impl AiBoard {
 				continue;
 			}
 
-			if compare(a, self.cells[i + 1], self.cells[i + 2]) {
+			if many_eq!(a, self.cells[i + 1], self.cells[i + 2]) {
 				return a;
 			}
 		}
@@ -45,7 +40,7 @@ impl AiBoard {
 				continue;
 			}
 
-			if compare(a, self.cells[i + 3], self.cells[i + 6]) {
+			if many_eq!(a, self.cells[i + 3], self.cells[i + 6]) {
 				return a;
 			}
 		}
@@ -53,9 +48,9 @@ impl AiBoard {
 		let middle = self.cells[4];
 		if middle == Players::Unset
 			// Check descending diagonal
-			|| compare(self.cells[0], middle, self.cells[8])
+			|| many_eq!(self.cells[0], middle, self.cells[8])
 			// Check ascending diagonal
-			|| compare(self.cells[6], middle, self.cells[2])
+			|| many_eq!(self.cells[6], middle, self.cells[2])
 		{
 			middle
 		} else {
