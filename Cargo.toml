@@ -8,12 +8,22 @@ description = "Lightning-fast AI for Skyra Project's games"
 [lib]
 crate-type = ["cdylib"]
 
+# [[bench]]
+# name = "bench"
+# harness = false
+
 [dependencies]
+lazy_static = "1.4.0"
 napi = { version = "2.3.3", default-features = false, features = ["napi8"] }
 napi-derive = "2.3.3"
 
 [build-dependencies]
 napi-build = "1.2.1"
 
+[dev-dependencies]
+criterion = "0.3.5"
+rand = "0.8.5"
+
 [profile.release]
 lto = true
+strip = true
