@@ -57,6 +57,21 @@ pub struct ConnectFour {
 	empty: u8,
 }
 
+macro_rules! gen_checks {
+    ($name:ident, $init:ident, $($x:ident),+) => {
+        unsafe fn $name(&self, cell: usize, $init: isize, $($x: isize),+) -> bool {
+            debug_assert!(cell as isize + $init >= 0);
+            debug_assert!(cell as isize + gen_checks!(@recurse $($x)+) < BOARD_CELLS as isize);
+            debug_assert!(self.cells[cell] != Players::Unset);
+
+            let ptr = self.cells.as_ptr().add(cell);
+            [$init, $($x),+].map(|x| *ptr.offset(x)).windows(4).any(|x| many_eq!(x[0], x[1], x[2], x[3]))
+        }
+    };
+    (@recurse $ident:ident) => {$ident};
+    (@recurse $_ident:ident $($ident:ident)+) => { gen_checks!(@recurse $($ident)+) };
+}
+
 impl ConnectFour {
 	fn new(cells: AiCells) -> Self {
 		let mut remaining = [0; BOARD_WIDTH];
@@ -74,83 +89,10 @@ impl ConnectFour {
 		Self { cells, remaining, empty }
 	}
 
-	unsafe fn check_4(&self, cell: usize, a: isize, b: isize, c: isize, d: isize) -> bool {
-		debug_assert!(cell as isize + a >= 0);
-		debug_assert!(cell as isize + d < BOARD_CELLS as isize);
-		debug_assert!(self.cells[cell] != Players::Unset);
-
-		let ptr = self.cells.as_ptr().add(cell);
-
-		let ca = *ptr.offset(a);
-		let cb = *ptr.offset(b);
-		let cc = *ptr.offset(c);
-		let cd = *ptr.offset(d);
-
-		many_eq!(ca, cb, cc, cd)
-	}
-
-	unsafe fn check_5(&self, cell: usize, a: isize, b: isize, c: isize, d: isize, e: isize) -> bool {
-		debug_assert!(cell as isize + a >= 0);
-		debug_assert!(cell as isize + e < BOARD_CELLS as isize);
-		debug_assert!(self.cells[cell] != Players::Unset);
-
-		let ptr = self.cells.as_ptr().add(cell);
-
-		let ca = *ptr.offset(a);
-		let cb = *ptr.offset(b);
-		let cc = *ptr.offset(c);
-		let cd = *ptr.offset(d);
-		let ce = *ptr.offset(e);
-
-		many_eq!(ca, cb, cc, cd) || many_eq!(cb, cc, cd, ce)
-	}
-
-	#[allow(clippy::too_many_arguments)]
-	unsafe fn check_6(&self, cell: usize, a: isize, b: isize, c: isize, d: isize, e: isize, f: isize) -> bool {
-		debug_assert!(cell as isize + a >= 0);
-		debug_assert!(cell as isize + f < BOARD_CELLS as isize);
-		debug_assert!(self.cells[cell] != Players::Unset);
-
-		let ptr = self.cells.as_ptr().add(cell);
-
-		let ca = *ptr.offset(a);
-		let cb = *ptr.offset(b);
-		let cc = *ptr.offset(c);
-		let cd = *ptr.offset(d);
-		let ce = *ptr.offset(e);
-		let cf = *ptr.offset(f);
-
-		many_eq!(ca, cb, cc, cd) || many_eq!(cb, cc, cd, ce) || many_eq!(cc, cd, ce, cf)
-	}
-
-	#[allow(clippy::too_many_arguments)]
-	unsafe fn check_7(
-		&self,
-		cell: usize,
-		a: isize,
-		b: isize,
-		c: isize,
-		d: isize,
-		e: isize,
-		f: isize,
-		g: isize,
-	) -> bool {
-		debug_assert!(cell as isize + a >= 0);
-		debug_assert!(cell as isize + g < BOARD_CELLS as isize);
-		debug_assert!(self.cells[cell] != Players::Unset);
-
-		let ptr = self.cells.as_ptr().add(cell);
-
-		let ca = *ptr.offset(a);
-		let cb = *ptr.offset(b);
-		let cc = *ptr.offset(c);
-		let cd = *ptr.offset(d);
-		let ce = *ptr.offset(e);
-		let cf = *ptr.offset(f);
-		let cg = *ptr.offset(g);
-
-		many_eq!(ca, cb, cc, cd) || many_eq!(cb, cc, cd, ce) || many_eq!(cc, cd, ce, cf) || many_eq!(cd, ce, cf, cg)
-	}
+	gen_checks! { check_4, a, b, c, d }
+	gen_checks! { check_5, a, b, c, d, e }
+	gen_checks! { check_6, a, b, c, d, e, f }
+	gen_checks! { check_7, a, b, c, d, e, f, g }
 
 	#[allow(clippy::too_many_arguments)]
 	unsafe fn status_row(
