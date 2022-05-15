@@ -1,5 +1,3 @@
-#![allow(clippy::nonminimal_bool)]
-
 use std::cmp;
 
 use napi::{bindgen_prelude::Uint8Array, Error, Result};
@@ -86,8 +84,9 @@ macro_rules! check_offsets {
 					MinMaxResult::OneElement(a) => (*a, *a),
 					_ => std::hint::unreachable_unchecked(),
 				};
-				assert!($cell as isize + min >= 0);
-				assert!($cell as isize + max < BOARD_CELLS as isize);
+				if ($cell as isize + min < 0) || ($cell as isize + max >= BOARD_CELLS as isize) {
+					panic!("{} + [{}, {}] offsets fall outside of cell bounds [0, {}]", $cell, min, max, BOARD_CELLS)
+				}
 				assert_ne!($cells[$cell], Players::Unset);
 			}
 
