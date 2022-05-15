@@ -1,3 +1,5 @@
+#![allow(clippy::nonminimal_bool)]
+
 use std::cmp;
 
 use napi::{bindgen_prelude::Uint8Array, Error, Result};
@@ -77,7 +79,7 @@ pub struct ConnectFour {
 macro_rules! check_offsets {
 	($cells:expr, $cell:expr, $($offset:expr),+ $(,)?) => {
 		{
-			debug_assert!(*[$($offset),+].iter().min().unwrap() >= ($cell as isize));
+			debug_assert!($cell as isize + [$($offset),+].iter().min().unwrap() >= 0);
 			debug_assert!($cell as isize + [$($offset),+].iter().max().unwrap() < BOARD_CELLS as isize);
 			debug_assert!($cells[$cell] != Players::Unset);
 
