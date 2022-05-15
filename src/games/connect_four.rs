@@ -75,7 +75,7 @@ pub struct ConnectFour {
 /// cell fall outside of the range [0,[`BOARD_CELLS`]), as this causes the
 /// resulting pointers to overshoot the cell collection.
 macro_rules! check_offsets {
-	($cells:expr, $cell:expr, $($offset:expr),+) => {
+	($cells:expr, $cell:expr, $($offset:expr),+ $(,)?) => {
 		{
 			debug_assert!(*[$($offset),+].iter().min().unwrap() >= ($cell as isize));
 			debug_assert!($cell as isize + [$($offset),+].iter().max().unwrap() < BOARD_CELLS as isize);

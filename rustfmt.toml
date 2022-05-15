@@ -3,3 +3,6 @@ max_width=120
 newline_style = "Unix"
 use_field_init_shorthand = true
 use_small_heuristics = "max"
+wrap_comments = true
+group_imports = "StdExternalCrate"
+imports_granularity = "Crate"

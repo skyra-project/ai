@@ -1,5 +1,6 @@
-use crate::{many_eq, Players, U_INVALID_INDEX};
 use std::cmp;
+
+use crate::{many_eq, Players, U_INVALID_INDEX};
 
 pub const BOARD_WIDTH: usize = 3;
 pub const BOARD_HEIGHT: usize = 3;
@@ -221,8 +222,9 @@ impl AiBoard {
 		//
 		// The center is 4, therefore, we return this number.
 		//
-		// Hardcoding this is useful, on an empty board, there are 362,880 possibilities.
-		// On a board with one move in, there are 40,320 possibilities. That's a lot less.
+		// Hardcoding this is useful, on an empty board, there are 362,880
+		// possibilities. On a board with one move in, there are 40,320 possibilities.
+		// That's a lot less.
 		if remaining == 9 {
 			4
 		} else {

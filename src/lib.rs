@@ -9,8 +9,10 @@ mod games {
 }
 
 use games::tic_tac_toe;
-use napi::bindgen_prelude::{ToNapiValue, Uint8Array};
-use napi::Error;
+use napi::{
+	bindgen_prelude::{ToNapiValue, Uint8Array},
+	Error,
+};
 
 #[napi]
 #[derive(Debug, PartialEq)]
