@@ -67,9 +67,8 @@ pub struct ConnectFour {
 /// collection of [`Players`]. `cell` therefore must be a `usize`, and all
 /// `offset`s are assumed to be an `isize`.
 ///
-/// Note that in debug mode, this makes expensive assertions that involve
-/// iterating through all `offset`s. This macro is optimized for release usages.
-/// It is also block-safe.
+/// Note that in debug mode, this makes assertions of `O(1.5n)` time, but it
+/// does not in release mode for optimizations. It is also block-safe.
 ///
 /// # Safety
 ///
@@ -79,9 +78,18 @@ pub struct ConnectFour {
 macro_rules! check_offsets {
 	($cells:expr, $cell:expr, $($offset:expr),+ $(,)?) => {
 		{
-			debug_assert!($cell as isize + [$($offset),+].iter().min().unwrap() >= 0);
-			debug_assert!($cell as isize + [$($offset),+].iter().max().unwrap() < BOARD_CELLS as isize);
-			debug_assert!($cells[$cell] != Players::Unset);
+			if cfg!(debug) {
+				use itertools::{MinMaxResult, Itertools};
+
+				let (min, max) = match [$($offset),+].iter().minmax() {
+					MinMaxResult::MinMax(a, b) => (*a, *b),
+					MinMaxResult::OneElement(a) => (*a, *a),
+					_ => std::hint::unreachable_unchecked(),
+				};
+				assert!($cell as isize + min >= 0);
+				assert!($cell as isize + max < BOARD_CELLS as isize);
+				assert_ne!($cells[$cell], Players::Unset);
+			}
 
 			let ptr = $cells.as_ptr().add($cell);
 			[$($offset),+].map(|x| *ptr.offset(x)).windows(4).any(|x| many_eq!(x[0], x[1], x[2], x[3]))

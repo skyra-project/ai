@@ -13,6 +13,7 @@ crate-type = ["cdylib"]
 # harness = false
 
 [dependencies]
+itertools = "0.10.3"
 lazy_static = "1.4.0"
 napi = { version = "2.3.3", default-features = false, features = ["napi8"] }
 napi-derive = "2.3.3"
