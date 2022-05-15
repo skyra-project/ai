@@ -1,7 +1,8 @@
-use crate::{many_eq, Players, U_INVALID_INDEX};
-use napi::bindgen_prelude::Uint8Array;
-use napi::{Error, Result};
 use std::cmp;
+
+use napi::{bindgen_prelude::Uint8Array, Error, Result};
+
+use crate::{many_eq, Players, U_INVALID_INDEX};
 
 pub const BOARD_WIDTH: usize = 7;
 pub const BOARD_HEIGHT: usize = 6;
@@ -57,19 +58,33 @@ pub struct ConnectFour {
 	empty: u8,
 }
 
-macro_rules! gen_checks {
-    ($name:ident, $init:ident, $($x:ident),+) => {
-        unsafe fn $name(&self, cell: usize, $init: isize, $($x: isize),+) -> bool {
-            debug_assert!(cell as isize + $init >= 0);
-            debug_assert!(cell as isize + gen_checks!(@recurse $($x)+) < BOARD_CELLS as isize);
-            debug_assert!(self.cells[cell] != Players::Unset);
+/// Checks a series of pointer offsets to see if any overlapping groups of 4 are
+/// equal.
+///
+/// This macro assumes `cells` is an expression resolving to an indexable
+/// collection of [`Players`]. `cell` therefore must be a `usize`, and all
+/// `offset`s are assumed to be an `isize`.
+///
+/// Note that in debug mode, this makes expensive assertions that involve
+/// iterating through all `offset`s. This macro is optimized for release usages.
+/// It is also block-safe.
+///
+/// # Safety
+///
+/// Undefined behaviour is caused if the pointer offsets added to the origin
+/// cell fall outside of the range [0,[`BOARD_CELLS`]), as this causes the
+/// resulting pointers to overshoot the cell collection.
+macro_rules! check_offsets {
+	($cells:expr, $cell:expr, $($offset:expr),+) => {
+		{
+			debug_assert!(*[$($offset),+].iter().min().unwrap() >= ($cell as isize));
+			debug_assert!($cell as isize + [$($offset),+].iter().max().unwrap() < BOARD_CELLS as isize);
+			debug_assert!($cells[$cell] != Players::Unset);
 
-            let ptr = self.cells.as_ptr().add(cell);
-            [$init, $($x),+].map(|x| *ptr.offset(x)).windows(4).any(|x| many_eq!(x[0], x[1], x[2], x[3]))
-        }
-    };
-    (@recurse $ident:ident) => {$ident};
-    (@recurse $_ident:ident $($ident:ident)+) => { gen_checks!(@recurse $($ident)+) };
+			let ptr = $cells.as_ptr().add($cell);
+			[$($offset),+].map(|x| *ptr.offset(x)).windows(4).any(|x| many_eq!(x[0], x[1], x[2], x[3]))
+		}
+	};
 }
 
 impl ConnectFour {
@@ -89,11 +104,6 @@ impl ConnectFour {
 		Self { cells, remaining, empty }
 	}
 
-	gen_checks! { check_4, a, b, c, d }
-	gen_checks! { check_5, a, b, c, d, e }
-	gen_checks! { check_6, a, b, c, d, e, f }
-	gen_checks! { check_7, a, b, c, d, e, f, g }
-
 	#[allow(clippy::too_many_arguments)]
 	unsafe fn status_row(
 		&self,
@@ -108,20 +118,20 @@ impl ConnectFour {
 	) -> bool {
 		match mask {
 			// 0bxx11:
-			0b0011 => self.check_4(cell, 0, r1, r2, r3),
-			0b0111 => self.check_5(cell, l1, 0, r1, r2, r3),
-			0b1011 => self.check_6(cell, l2, l1, 0, r1, r2, r3),
+			0b0011 => check_offsets!(self.cells, cell, 0, r1, r2, r3),
+			0b0111 => check_offsets!(self.cells, cell, l1, 0, r1, r2, r3),
+			0b1011 => check_offsets!(self.cells, cell, l2, l1, 0, r1, r2, r3),
 			// 0b11xx:
-			0b1100 => self.check_4(cell, l3, l2, l1, 0),
-			0b1101 => self.check_5(cell, l3, l2, l1, 0, r1),
-			0b1110 => self.check_6(cell, l3, l2, l1, 0, r1, r2),
-			0b1111 => self.check_7(cell, l3, l2, l1, 0, r1, r2, r3),
+			0b1100 => check_offsets!(self.cells, cell, l3, l2, l1, 0),
+			0b1101 => check_offsets!(self.cells, cell, l3, l2, l1, 0, r1),
+			0b1110 => check_offsets!(self.cells, cell, l3, l2, l1, 0, r1, r2),
+			0b1111 => check_offsets!(self.cells, cell, l3, l2, l1, 0, r1, r2, r3),
 
 			// 0b01xx \ {0b0100, 0b0101} -> {0b0110, [0b0111]}:
-			0b0110 => self.check_4(cell, l1, 0, r1, r2),
+			0b0110 => check_offsets!(self.cells, cell, l1, 0, r1, r2),
 			// 0b10xx \ {0b1000} -> {0b1001, 0b1010, [0b1011]}:
-			0b1001 => self.check_4(cell, l2, l1, 0, r1),
-			0b1010 => self.check_5(cell, l2, l1, 0, r1, r2),
+			0b1001 => check_offsets!(self.cells, cell, l2, l1, 0, r1),
+			0b1010 => check_offsets!(self.cells, cell, l2, l1, 0, r1, r2),
 			// 0bxx01 \ {0b0001, 0b0101} -> {[0b1001], [0b1101]}:
 			// 0bxx10 \ {0b0010} -> {[0b0110], [0b1010], [0b1100]}:
 
@@ -140,7 +150,7 @@ impl ConnectFour {
 		const B1: isize = I_BOARD_WIDTH;
 		const B2: isize = B1 * 2;
 		const B3: isize = B1 * 3;
-		if AVAILABLE_BOTTOM[last_cell_offset] == 3 && self.check_4(last_cell_offset, 0, B1, B2, B3) {
+		if AVAILABLE_BOTTOM[last_cell_offset] == 3 && check_offsets!(self.cells, last_cell_offset, 0, B1, B2, B3) {
 			return true;
 		}
 
@@ -351,8 +361,8 @@ impl ConnectFour {
 	fn get_best_move(&mut self, maximum_depth: u8) -> usize {
 		// If remaining is 42, then the board is empty.
 		//
-		// Strategically speaking, the middle position in ConnectFour is always the best,
-		// and very often a winner move. The algorithm will always pick this.
+		// Strategically speaking, the middle position in ConnectFour is always the
+		// best, and very often a winner move. The algorithm will always pick this.
 		//
 		// We have this board:
 		// 00 01 02 03 04 05 06
@@ -364,7 +374,8 @@ impl ConnectFour {
 		//
 		// The center is 4, therefore, we return this number.
 		//
-		// Hardcoding this is useful, on an empty board, there are 4,531,985,219,092 possibilities.
+		// Hardcoding this is useful, on an empty board, there are 4,531,985,219,092
+		// possibilities.
 		if self.empty == 42 {
 			3
 		} else {
@@ -529,7 +540,7 @@ mod tests {
 					let board = ConnectFour::new($cells);
 
 					unsafe {
-						board.check_4($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3);
+						check_offsets!(board.cells, $last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3);
 					}
 				}
 			)*);
@@ -546,7 +557,7 @@ mod tests {
 			let board = ConnectFour::new(create_cells!(0, 2, 3, 4));
 
 			unsafe {
-				assert!(!board.check_4(0, 0, 1, 2, 3));
+				assert!(!check_offsets!(board.cells, 0, 0, 1, 2, 3));
 			}
 		}
 
@@ -558,7 +569,7 @@ mod tests {
 					let board = ConnectFour::new(create_cells!(0, 1, 2, 3, 4));
 
 					unsafe {
-						assert!(board.check_4($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3));
+						assert!(check_offsets!(board.cells, $last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3));
 					}
 				}
 			)*
@@ -584,7 +595,7 @@ mod tests {
 					let board = ConnectFour::new($cells);
 
 					unsafe {
-						board.check_5($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4);
+						check_offsets!(board.cells, $last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4);
 					}
 				}
 			)*);
@@ -601,7 +612,7 @@ mod tests {
 			let board = ConnectFour::new(create_cells!(0, 2, 3, 4));
 
 			unsafe {
-				assert!(!board.check_5(2, -1, 0, 1, 2, 3));
+				assert!(!check_offsets!(board.cells, 2, -1, 0, 1, 2, 3));
 			}
 		}
 
@@ -613,7 +624,7 @@ mod tests {
 					let board = ConnectFour::new(create_cells!(0, 1, 2, 3));
 
 					unsafe {
-						assert!(board.check_5($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4));
+						assert!(check_offsets!(board.cells, $last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4));
 					}
 				}
 			)*
@@ -639,7 +650,7 @@ mod tests {
 					let board = ConnectFour::new($cells);
 
 					unsafe {
-						board.check_6($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4, $offsets.5);
+						check_offsets!(board.cells, $last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4, $offsets.5);
 					}
 				}
 			)*);
@@ -656,7 +667,7 @@ mod tests {
 			let board = ConnectFour::new(create_cells!(0, 2, 3, 4));
 
 			unsafe {
-				assert!(!board.check_6(2, -2, -1, 0, 1, 2, 3));
+				assert!(!check_offsets!(board.cells, 2, -2, -1, 0, 1, 2, 3));
 			}
 		}
 
@@ -668,7 +679,7 @@ mod tests {
 					let board = ConnectFour::new(create_cells!(0, 1, 2, 3, 4));
 
 					unsafe {
-						assert!(board.check_6($last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4, $offsets.5));
+						assert!(check_offsets!(board.cells, $last_column, $offsets.0, $offsets.1, $offsets.2, $offsets.3, $offsets.4, $offsets.5));
 					}
 				}
 			)*
@@ -694,7 +705,7 @@ mod tests {
 					let board = ConnectFour::new($cells);
 
 					unsafe {
-						board.check_7($cell, -3, -2, -1, 0, 1, 2, 3);
+						check_offsets!(board.cells, $cell, -3, -2, -1, 0, 1, 2, 3);
 					}
 				}
 			)*);
@@ -711,7 +722,7 @@ mod tests {
 			let board = ConnectFour::new(create_cells!(0, 2, 3, 4));
 
 			unsafe {
-				assert!(!board.check_7(3, -3, -2, -1, 0, 1, 2, 3));
+				assert!(!check_offsets!(board.cells, 3, -3, -2, -1, 0, 1, 2, 3));
 			}
 		}
 
@@ -723,7 +734,7 @@ mod tests {
 					let board = ConnectFour::new(create_cells!(0, 1, 2, 3, 4));
 
 					unsafe {
-						assert!(board.check_7($last_column, -3, -2, -1, 0, 1, 2, 3));
+						assert!(check_offsets!(board.cells, $last_column, -3, -2, -1, 0, 1, 2, 3));
 					}
 				}
 			)*
