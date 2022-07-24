@@ -28,8 +28,8 @@
 		"tslib": "^2.4.0"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.18.6",
-		"@babel/preset-env": "^7.18.6",
+		"@babel/core": "^7.18.9",
+		"@babel/preset-env": "^7.18.9",
 		"@babel/preset-typescript": "^7.18.6",
 		"@commitlint/cli": "^17.0.3",
 		"@commitlint/config-conventional": "^17.0.3",
@@ -97,5 +97,5 @@
 	},
 	"gypfile": true,
 	"prettier": "@sapphire/prettier-config",
-	"packageManager": "yarn@3.2.1"
+	"packageManager": "yarn@3.2.2"
 }
