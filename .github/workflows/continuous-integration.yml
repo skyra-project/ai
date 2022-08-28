@@ -12,7 +12,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: [12, 14, 15, 16, 17]
+        node: [14, 16]
         os: [ubuntu-18.04, ubuntu-20.04, macos-latest]
         include:
           - node: 18
@@ -42,7 +42,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        node: [12, 14, 15, 16, 17]
+        node: [14, 16]
         os: [ubuntu-18.04, ubuntu-20.04, macos-latest]
         include:
           - node: 18
