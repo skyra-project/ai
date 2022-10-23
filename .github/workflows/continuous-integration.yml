@@ -21,13 +21,13 @@ jobs:
             os: macos-latest
     steps:
       - name: Checkout Project
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3
+        uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Add problem matcher
         run: echo "::add-matcher::.github/problemMatchers/tsc.json"
       - name: Use Node.js v${{ matrix.node }}
-        uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # tag=v3
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
           cache: yarn
@@ -51,11 +51,11 @@ jobs:
             os: macos-latest
     steps:
       - name: Checkout Project
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8 # tag=v3
+        uses: actions/checkout@v3
         with:
           submodules: recursive
       - name: Use Node.js v${{ matrix.node }}
-        uses: actions/setup-node@8c91899e586c5b171469028077307d293428b516 # tag=v3
+        uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
           cache: yarn
@@ -63,7 +63,7 @@ jobs:
       - name: Install Dependencies
         run: yarn --immutable
       - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@4f73d30c2fc44a9466a3ed890fb8db7a7b554302 # tag=v1.13
+        uses: jwlawson/actions-setup-cmake@v1.13
         with:
           cmake-version: '3.16.x'
       - name: Build C++ tests
