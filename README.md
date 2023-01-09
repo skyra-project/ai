@@ -39,13 +39,14 @@ We accept donations through Patreon, BitCoin, Ethereum, and Litecoin. You can us
 
 Please make sure to read the [Contributing Guide][contributing] before making a pull request.
 
-Thank you to all the people who already contributed to Sapphire!
+Thank you to all the people who already contributed to Skyra Project!
 
 <a href="https://github.com/skyra-project/ai/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=skyra-project/ai" />
 </a>
 
-[contributing]: https://github.com/skyra-project/.github/blob/main/.github/CONTRIBUTING.md[skyra]: https://github.com/skyra-project/ai
+[contributing]: https://github.com/skyra-project/.github/blob/main/.github/CONTRIBUTING.md
+[skyra]: https://github.com/skyra-project/ai
 [patreonimage]: https://cdn.skyra.pw/gh-assets/patreon.png
 [paypalimage]: https://cdn.skyra.pw/gh-assets/paypal.png
 [bitcoinimage]: https://cdn.skyra.pw/gh-assets/bitcoin.png
