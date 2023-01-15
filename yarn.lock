@@ -2109,12 +2109,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sapphire/prettier-config@npm:^1.4.4":
-  version: 1.4.4
-  resolution: "@sapphire/prettier-config@npm:1.4.4"
+"@sapphire/prettier-config@npm:^1.4.5":
+  version: 1.4.5
+  resolution: "@sapphire/prettier-config@npm:1.4.5"
   dependencies:
-    prettier: ^2.7.1
-  checksum: bf0f37de120b72b054da8b90ddf08c23210c8b01e42f66c4a6833d55ac78c02e3df7f9af6d35f2574e9c9f5c8b131625730a60bcac055b211789b52101a8921e
+    prettier: ^2.8.2
+  checksum: 241dfda0e73d1cb62d97fc946530041f1515a077572e4fd2da9f0bef80b97fbd8828ad6d36f6c98561b217acce185d111175eb3c889907e2591daf778e800274
   languageName: node
   linkType: hard
 
@@ -2137,7 +2137,7 @@ __metadata:
     "@babel/preset-typescript": ^7.18.6
     "@commitlint/cli": ^17.4.0
     "@commitlint/config-conventional": ^17.4.0
-    "@sapphire/prettier-config": ^1.4.4
+    "@sapphire/prettier-config": ^1.4.5
     "@sapphire/ts-config": ^3.3.4
     "@types/bindings": ^1.5.1
     "@types/node": ^18.11.18
@@ -5882,15 +5882,6 @@ __metadata:
     picocolors: ^1.0.0
     source-map-js: ^1.0.2
   checksum: 1a5609ea1c1b204f9c2974a0019ae9eef2d99bf645c2c9aac675166c4cb1005be7b5e2ba196160bc771f5d9ac896ed883f236f888c891e835e59d28fff6651aa
-  languageName: node
-  linkType: hard
-
-"prettier@npm:^2.7.1":
-  version: 2.8.1
-  resolution: "prettier@npm:2.8.1"
-  bin:
-    prettier: bin-prettier.js
-  checksum: 4f21a0f1269f76fb36f54e9a8a1ea4c11e27478958bf860661fb4b6d7ac69aac1581f8724fa98ea3585e56d42a2ea317a17ff6e3324f40cb11ff9e20b73785cc
   languageName: node
   linkType: hard
 
