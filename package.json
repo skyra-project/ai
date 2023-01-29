@@ -25,7 +25,7 @@
 	"dependencies": {
 		"bindings": "^1.5.0",
 		"node-addon-api": "*",
-		"tslib": "^2.4.1"
+		"tslib": "^2.5.0"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.20.12",
@@ -37,15 +37,15 @@
 		"@sapphire/ts-config": "^3.3.4",
 		"@types/bindings": "^1.5.1",
 		"@types/node": "^18.11.18",
-		"@vitest/coverage-c8": "^0.28.1",
+		"@vitest/coverage-c8": "^0.28.3",
 		"cz-conventional-changelog": "^3.3.0",
-		"esbuild": "^0.17.4",
+		"esbuild": "^0.17.5",
 		"husky": "^8.0.3",
 		"node-gyp": "^9.3.1",
 		"npm-run-all": "^4.1.5",
 		"prettier": "^2.8.3",
 		"pretty-quick": "^3.1.3",
-		"rollup": "^3.10.1",
+		"rollup": "^3.12.0",
 		"rollup-plugin-cleaner": "^1.0.0",
 		"rollup-plugin-terser": "^7.0.2",
 		"rollup-plugin-typescript2": "^0.34.1",
@@ -53,7 +53,7 @@
 		"ts-node": "^10.9.1",
 		"typescript": "^4.9.4",
 		"vite": "^4.0.4",
-		"vitest": "^0.28.1"
+		"vitest": "^0.28.3"
 	},
 	"resolutions": {
 		"ansi-regex": "^5.0.1",
