@@ -6,75 +6,93 @@ on:
       - main
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  Building:
-    name: Compile source code Node v${{ matrix.node }} on ${{ matrix.os }}
+  build_test:
+    name: Build and Test Node v${{ matrix.node }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
     strategy:
+      fail-fast: false
       matrix:
-        node: [14, 16]
-        os: [ubuntu-18.04, ubuntu-20.04, macos-latest]
-        include:
-          - node: 18
-            os: ubuntu-20.04
-          - node: 18
-            os: macos-latest
+        os: [macos-10.15, macos-11, macos-12, ubuntu-20.04, ubuntu-22.04]
+        node: [16, 18, 19, 20]
     steps:
       - name: Checkout Project
         uses: actions/checkout@v3
         with:
           submodules: recursive
+
       - name: Add problem matcher
         run: echo "::add-matcher::.github/problemMatchers/tsc.json"
-      - name: Use Node.js v${{ matrix.node }}
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node }}
-          cache: yarn
-          registry-url: https://registry.npmjs.org/
-      - name: Install Dependencies
-        run: yarn --immutable
-      - name: Build Code
-        run: yarn build
 
-  Testing:
-    name: Unit Tests Node v${{ matrix.node }} on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        node: [14, 16]
-        os: [ubuntu-18.04, ubuntu-20.04, macos-latest]
-        include:
-          - node: 18
-            os: ubuntu-20.04
-          - node: 18
-            os: macos-latest
-    steps:
-      - name: Checkout Project
-        uses: actions/checkout@v3
-        with:
-          submodules: recursive
       - name: Use Node.js v${{ matrix.node }}
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
           cache: yarn
-          registry-url: https://registry.npmjs.org/
+          registry-url: https://registry.yarnpkg.org/
+
       - name: Install Dependencies
         run: yarn --immutable
+
       - name: Setup CMake
         uses: jwlawson/actions-setup-cmake@v1.13
         with:
           cmake-version: '3.16.x'
+
       - name: Build C++ tests
         run: mkdir build-tests && cd build-tests && cmake .. && cmake --build . && cd ..
+
+      - name: Build Code
+        run: yarn build
+
       - name: Run NodeJS tests
         run: yarn test
+
       - name: Run C++ Tests
         shell: bash
+        run: ./build-tests/skyra_ai_tests
+
+  build_test_musl_x86_64:
+    name: Build and Test x86_64(musl)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: node:${{ matrix.node }}-alpine
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [16, 18, 19, 20]
+    steps:
+      - name: Setup env with Node v${{ matrix.node }}
         run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            ./build-tests/Debug/skyra_ai_tests.exe
-          else
-            ./build-tests/skyra_ai_tests
-          fi
+          apk add --update
+          apk add --no-cache ca-certificates git curl build-base python3 g++ make cmake bash
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Add problem matcher
+        run: echo "::add-matcher::.github/problemMatchers/tsc.json"
+
+      - name: Install dependencies
+        run: yarn --immutable
+
+      - name: Build C++ tests
+        run: mkdir build-tests && cd build-tests && cmake .. && cmake --build . && cd ..
+
+      - name: Build Code
+        run: yarn build
+
+      - name: Run NodeJS tests
+        run: yarn test
+
+      - name: Run C++ Tests
+        shell: bash
+        run: ./build-tests/skyra_ai_tests
