@@ -45,7 +45,7 @@ jobs:
           cmake-version: '3.16.x'
 
       - name: Build C++ tests
-        run: mkdir build-tests && pushd build-tests && cmake .. && cmake --build . && popd
+        run: mkdir build-tests && cd build-tests && cmake .. && cmake --build . && cd ..
 
       - name: Build Code
         run: yarn build
@@ -85,7 +85,7 @@ jobs:
         run: yarn --immutable
 
       - name: Build C++ tests
-        run: mkdir build-tests && pushd build-tests && cmake .. && cmake --build . && popd
+        run: mkdir build-tests && cd build-tests && cmake .. && cmake --build . && cd ..
 
       - name: Build Code
         run: yarn build
