@@ -37,7 +37,7 @@
 		"@sapphire/ts-config": "^4.0.0",
 		"@types/bindings": "^1.5.1",
 		"@types/node": "^18.16.17",
-		"@vitest/coverage-c8": "^0.32.0",
+		"@vitest/coverage-v8": "^0.32.0",
 		"cz-conventional-changelog": "^3.3.0",
 		"esbuild": "^0.18.0",
 		"husky": "^8.0.3",
