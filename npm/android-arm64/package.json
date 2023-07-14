@@ -1,15 +1,15 @@
 {
-  "name": "@skyra/ai-darwin-arm64",
+  "name": "@skyra/ai-android-arm64",
   "version": "1.2.0",
   "os": [
-    "darwin"
+    "android"
   ],
   "cpu": [
     "arm64"
   ],
-  "main": "ai.darwin-arm64.node",
+  "main": "ai.android-arm64.node",
   "files": [
-    "ai.darwin-arm64.node"
+    "ai.android-arm64.node"
   ],
   "description": "Lightning-fast AI for Skyra Project's games",
   "keywords": [

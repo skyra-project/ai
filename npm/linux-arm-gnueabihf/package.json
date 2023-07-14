@@ -1,15 +1,15 @@
 {
-  "name": "@skyra/ai-darwin-arm64",
+  "name": "@skyra/ai-linux-arm-gnueabihf",
   "version": "1.2.0",
   "os": [
-    "darwin"
+    "linux"
   ],
   "cpu": [
-    "arm64"
+    "arm"
   ],
-  "main": "ai.darwin-arm64.node",
+  "main": "ai.linux-arm-gnueabihf.node",
   "files": [
-    "ai.darwin-arm64.node"
+    "ai.linux-arm-gnueabihf.node"
   ],
   "description": "Lightning-fast AI for Skyra Project's games",
   "keywords": [

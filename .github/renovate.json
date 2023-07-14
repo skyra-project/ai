@@ -1,4 +1,15 @@
 {
 	"$schema": "https://docs.renovatebot.com/renovate-schema.json",
-	"enabled": false
+	"extends": ["github>sapphiredev/readme:sapphire-renovate"],
+	"packageRules": [
+		{
+			"matchPackageNames": ["@napi/cli", "napi", "napi-build", "napi-derive"],
+			"addLabels": ["napi-rs"],
+			"groupName": "napi-rs"
+		},
+		{
+			"matchPackagePatterns": ["^eslint", "^@typescript-eslint"],
+			"groupName": "linter"
+		}
+	]
 }
