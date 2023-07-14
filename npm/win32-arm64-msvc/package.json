@@ -1,15 +1,15 @@
 {
-  "name": "@skyra/ai-darwin-arm64",
+  "name": "@skyra/ai-win32-arm64-msvc",
   "version": "1.2.0",
   "os": [
-    "darwin"
+    "win32"
   ],
   "cpu": [
     "arm64"
   ],
-  "main": "ai.darwin-arm64.node",
+  "main": "ai.win32-arm64-msvc.node",
   "files": [
-    "ai.darwin-arm64.node"
+    "ai.win32-arm64-msvc.node"
   ],
   "description": "Lightning-fast AI for Skyra Project's games",
   "keywords": [

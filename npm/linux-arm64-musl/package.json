@@ -1,15 +1,18 @@
 {
-  "name": "@skyra/ai-darwin-arm64",
+  "name": "@skyra/ai-linux-arm64-musl",
   "version": "1.2.0",
   "os": [
-    "darwin"
+    "linux"
   ],
   "cpu": [
     "arm64"
   ],
-  "main": "ai.darwin-arm64.node",
+  "libc": [
+    "musl"
+  ],
+  "main": "ai.linux-arm64-musl.node",
   "files": [
-    "ai.darwin-arm64.node"
+    "ai.linux-arm64-musl.node"
   ],
   "description": "Lightning-fast AI for Skyra Project's games",
   "keywords": [
