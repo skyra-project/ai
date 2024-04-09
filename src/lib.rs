@@ -8,8 +8,6 @@ mod games {
 	pub mod tic_tac_toe;
 }
 
-use napi::bindgen_prelude::{FromNapiValue, ToNapiValue};
-
 #[napi]
 #[derive(Debug, PartialEq)]
 pub enum Player {
