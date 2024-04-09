@@ -1060,11 +1060,11 @@ mod tests {
 		use super::super::*;
 
 		macro_rules! generate_test {
-			($($name:ident: [$cells:expr, $outcome:expr, $depth:expr],)*) => ($(
+			($($name:ident: [$cells:expr, $outcome:expr],)*) => ($(
 				#[test]
 				fn $name() {
 					let mut board = ConnectFour::new($cells);
-					let max = board.max_top($depth);
+					let max = board.max_top(7);
 
 					assert_eq!(max, $outcome);
 				}
@@ -1074,11 +1074,11 @@ mod tests {
 		generate_test! {
 			// this case isn't very accurate considering an empty board would always give 3
 			// but cause we're testing max_top rather than get_best_move, that hardcoded choice doesn't happen
-			test_empty_board: [create_cells!(), 0, 7],
-			test_stop_horizontal_winning_move: [create_cells!(0, 1, 2), 3, 7],
-			test_stop_vertical_winning_move: [create_cells!(7, 14, 28), 0, 7],
-			test_stop_tl_br_winning_move: [create_cells!(0, 8, 16, 31), 3, 7],
-			test_stop_bl_tr_winning_move: [create_cells!(21, 15, 9, 10), 3, 7],
+			test_empty_board: [create_cells!(), 0],
+			test_stop_horizontal_winning_move: [create_cells!(0, 1, 2), 3],
+			test_stop_vertical_winning_move: [create_cells!(7, 14, 28), 0],
+			test_stop_tl_br_winning_move: [create_cells!(0, 8, 16, 31), 3],
+			test_stop_bl_tr_winning_move: [create_cells!(21, 15, 9, 10), 3],
 		}
 	}
 }
