@@ -1,3 +1,8 @@
 {
-	"extends": "@sapphire/ts-config/extra-strict-without-decorators"
+	"extends": ["@sapphire/ts-config", "@sapphire/ts-config/extra-strict"],
+	"compilerOptions": {
+		"allowJs": true,
+		"noEmit": true,
+		"incremental": false
+	}
 }

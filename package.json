@@ -25,18 +25,16 @@
 	],
 	"sideEffects": false,
 	"scripts": {
-		"test": "run-p \"test:node\" \"test:rust\"",
-		"test:node": "vitest --run",
-		"test:rust": "cargo test",
-		"fmt": "run-p \"fmt:node\" \"fmt:rust\"",
-		"fmt:node": "prettier --write .github npm tests index.cjs index.mjs index.d.ts",
-		"fmt:rust": "cargo +nightly fmt",
-		"clean": "node scripts/clean.mjs",
 		"artifacts": "napi artifacts",
-		"build": "napi build --platform --release --js index.cjs --pipe \"prettier -w\"",
-		"build:debug": "napi build --platform --js index.cjs --pipe \"prettier -w\"",
-		"update": "yarn upgrade-interactive",
+		"build": "napi build --platform --js index.cjs --no-const-enum --release --pipe \"prettier -w\"",
+		"build:debug": "napi build --platform --js index.cjs --no-const-enum --pipe \"prettier -w\"",
+		"format": "run-p format:prettier format:rs format:toml",
+		"format:prettier": "prettier . -w",
+		"format:toml": "taplo format",
+		"format:rs": "cargo +nightly fmt",
+		"lint": "eslint .",
 		"prepublishOnly": "napi prepublish -t npm",
+		"test": "vitest run",
 		"version": "napi version"
 	},
 	"napi": {
@@ -60,12 +58,15 @@
 		"@commitlint/cli": "^19.2.2",
 		"@commitlint/config-conventional": "^19.2.2",
 		"@napi-rs/cli": "^2.18.1",
+		"@sapphire/eslint-config": "^5.0.4",
 		"@sapphire/prettier-config": "^2.0.0",
+		"@sapphire/ts-config": "^5.0.1",
+		"@taplo/cli": "^0.7.0",
 		"@types/node": "^20.12.7",
 		"@vitest/coverage-v8": "^1.5.0",
-		"npm-run-all": "^4.1.5",
+		"lint-staged": "^15.2.2",
+		"npm-run-all2": "^6.1.2",
 		"prettier": "^3.2.5",
-		"pretty-quick": "^4.0.0",
 		"vitest": "^1.5.0"
 	},
 	"resolutions": {
@@ -93,6 +94,17 @@
 	},
 	"publishConfig": {
 		"access": "public"
+	},
+	"lint-staged": {
+		"*.@(js|ts|tsx)": [
+			"eslint --fix"
+		],
+		"*.@(js|ts|tsx|yml|yaml|md|json)": [
+			"prettier --write"
+		],
+		"*.toml": [
+			"taplo format"
+		]
 	},
 	"prettier": "@sapphire/prettier-config",
 	"eslintConfig": {
