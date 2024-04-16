@@ -1,75 +1,84 @@
 {
 	"name": "@skyra/ai",
 	"version": "1.2.0",
-	"description": "Advanced Gaming AI for Skyra",
+	"description": "Lightning-fast AI for Skyra Project's games",
 	"author": "kyranet <kyradiscord@gmail.com>",
 	"license": "MIT",
-	"main": "dist/main.js",
-	"module": "dist/main.mjs",
-	"types": "dist/main.d.ts",
-	"sideEffects": false,
-	"scripts": {
-		"test": "yarn build && vitest run",
-		"clean": "node scripts/clean.mjs",
-		"build": "run-p \"build:node\" \"build:cpp\"",
-		"build:cpp": "run-s \"gyp**\"",
-		"build:node": "rollup -c rollup.config.mjs",
-		"gypconfigure": "node-gyp configure",
-		"gypbuild": "node-gyp build",
-		"sversion": "standard-version",
-		"update": "yarn up \"@*/*\" -i && yarn up \"*\" -i",
-		"install": "node-gyp rebuild",
-		"prepack": "yarn build"
-	},
-	"dependencies": {
-		"bindings": "^1.5.0",
-		"node-addon-api": "*",
-		"tslib": "^2.6.0"
-	},
-	"devDependencies": {
-		"@babel/core": "^7.22.8",
-		"@babel/preset-env": "^7.22.7",
-		"@babel/preset-typescript": "^7.22.5",
-		"@commitlint/cli": "^17.6.6",
-		"@commitlint/config-conventional": "^17.6.6",
-		"@sapphire/prettier-config": "^1.4.5",
-		"@sapphire/ts-config": "^4.0.0",
-		"@types/bindings": "^1.5.1",
-		"@types/node": "^18.16.19",
-		"@vitest/coverage-v8": "^0.33.0",
-		"cz-conventional-changelog": "^3.3.0",
-		"esbuild": "^0.18.11",
-		"lint-staged": "^15.0.1",
-		"node-gyp": "^9.4.0",
-		"npm-run-all": "^4.1.5",
-		"prettier": "^3.0.0",
-		"rollup": "^3.26.2",
-		"rollup-plugin-cleaner": "^1.0.0",
-		"rollup-plugin-terser": "^7.0.2",
-		"rollup-plugin-typescript2": "^0.35.0",
-		"standard-version": "^9.5.0",
-		"ts-node": "^10.9.1",
-		"typescript": "^5.1.6",
-		"vite": "^4.4.2",
-		"vitest": "^0.33.0"
-	},
-	"resolutions": {
-		"ansi-regex": "^5.0.1",
-		"minimist": "^1.2.8"
+	"main": "index.cjs",
+	"module": "index.mjs",
+	"types": "index.d.ts",
+	"type": "module",
+	"exports": {
+		"import": {
+			"types": "./index.d.ts",
+			"default": "./index.mjs"
+		},
+		"require": {
+			"types": "./index.d.ts",
+			"default": "./index.cjs"
+		}
 	},
 	"files": [
-		"src",
-		"include",
-		"binding.gyp",
-		"dist",
-		"!dist/.tsbuildinfo"
+		"index.cjs",
+		"index.mjs",
+		"index.d.ts"
 	],
+	"sideEffects": false,
+	"scripts": {
+		"artifacts": "napi artifacts",
+		"build": "napi build --platform --js index.cjs --no-const-enum --release --pipe \"prettier -w\"",
+		"build:debug": "napi build --platform --js index.cjs --no-const-enum --pipe \"prettier -w\"",
+		"format": "run-p format:prettier format:rs format:toml",
+		"format:prettier": "prettier . -w",
+		"format:toml": "taplo format",
+		"format:rs": "cargo +nightly fmt",
+		"lint": "eslint .",
+		"prepublishOnly": "napi prepublish -t npm",
+		"test": "vitest run",
+		"version": "napi version"
+	},
+	"napi": {
+		"name": "ai",
+		"triples": {
+			"defaults": true,
+			"additional": [
+				"x86_64-unknown-linux-musl",
+				"aarch64-unknown-linux-gnu",
+				"armv7-unknown-linux-gnueabihf",
+				"aarch64-apple-darwin",
+				"aarch64-linux-android",
+				"x86_64-unknown-freebsd",
+				"aarch64-unknown-linux-musl",
+				"aarch64-pc-windows-msvc",
+				"armv7-linux-androideabi"
+			]
+		}
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^19.2.2",
+		"@commitlint/config-conventional": "^19.2.2",
+		"@napi-rs/cli": "^2.18.1",
+		"@sapphire/eslint-config": "^5.0.4",
+		"@sapphire/prettier-config": "^2.0.0",
+		"@sapphire/ts-config": "^5.0.1",
+		"@taplo/cli": "^0.7.0",
+		"@types/node": "^20.12.7",
+		"@vitest/coverage-v8": "^1.5.0",
+		"eslint": "^8.52.0",
+		"lint-staged": "^15.2.2",
+		"npm-run-all2": "^6.1.2",
+		"prettier": "^3.2.5",
+		"vitest": "^1.5.0"
+	},
+	"resolutions": {
+		"minimist": "^1.2.6"
+	},
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/skyra-project/ai.git"
 	},
 	"bugs": {
-		"url": "https://github.com/skyra-project/skyra/issues"
+		"url": "https://github.com/skyra-project/ai/issues"
 	},
 	"keywords": [
 		"discord.js",
@@ -77,26 +86,33 @@
 		"standalone"
 	],
 	"engines": {
-		"node": ">=v14.18.0",
-		"npm": ">=7.24.2"
-	},
-	"lint-staged": {
-		"*": "prettier --ignore-unknown --write"
+		"node": ">= v16"
 	},
 	"commitlint": {
 		"extends": [
 			"@commitlint/config-conventional"
 		]
 	},
-	"config": {
-		"commitizen": {
-			"path": "./node_modules/cz-conventional-changelog"
-		}
-	},
 	"publishConfig": {
 		"access": "public"
 	},
-	"gypfile": true,
+	"lint-staged": {
+		"*.@(js|ts|tsx)": [
+			"eslint --fix"
+		],
+		"*.@(js|ts|tsx|yml|yaml|md|json)": [
+			"prettier --write"
+		],
+		".rs": [
+			"cargo +nightly fmt"
+		],
+		"*.toml": [
+			"taplo format"
+		]
+	},
 	"prettier": "@sapphire/prettier-config",
-	"packageManager": "yarn@3.6.1"
+	"eslintConfig": {
+		"extends": "@sapphire"
+	},
+	"packageManager": "yarn@4.1.1"
 }

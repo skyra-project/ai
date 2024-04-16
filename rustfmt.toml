@@ -1,0 +1,8 @@
+group_imports            = "StdExternalCrate"
+hard_tabs                = true
+imports_granularity      = "Crate"
+max_width                = 120
+newline_style            = "Unix"
+use_field_init_shorthand = true
+use_small_heuristics     = "Max"
+wrap_comments            = true

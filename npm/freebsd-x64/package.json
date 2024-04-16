@@ -1,0 +1,30 @@
+{
+	"name": "@skyra/ai-freebsd-x64",
+	"version": "1.2.0",
+	"os": [
+		"freebsd"
+	],
+	"cpu": [
+		"x64"
+	],
+	"main": "ai.freebsd-x64.node",
+	"files": [
+		"ai.freebsd-x64.node"
+	],
+	"description": "Lightning-fast AI for Skyra Project's games",
+	"keywords": [
+		"skyra",
+		"skyra-project",
+		"game",
+		"ai"
+	],
+	"license": "MIT",
+	"engines": {
+		"node": ">= 16"
+	},
+	"publishConfig": {
+		"registry": "https://registry.npmjs.org/",
+		"access": "public"
+	},
+	"repository": "git@github.com:skyra-project/ai.git"
+}

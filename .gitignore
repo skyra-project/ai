@@ -1,25 +1,25 @@
-# Ignore a blackhole and the folder for development
+### Node ###
+# Logs
+logs
+*.log
+
+# Dependency directories
 node_modules/
-.vs/
-.idea/
-*.iml
 
-# Environment variables
-.DS_Store
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Ignore output folders and compile files
-dist/
-build/
+# TypeScript cache
 *.tsbuildinfo
 coverage/
 
-# Ignore heapsnapshot and log files
-*.heapsnapshot
-*.log
+### macOS ###
+# General
+.DS_Store
+
+# Added by cargo
+
+/target
+Cargo.lock
+
+*.node
 
 # Ignore package locks
 package-lock.json
