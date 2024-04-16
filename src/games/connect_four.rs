@@ -912,13 +912,7 @@ mod tests {
 			test_column_full: [create_cells!(0, 7, 14, 21, 28, 35), 0, 0],
 			test_offset_out_of_range: [create_cells!(), 0, 42],
 			test_already_set: [create_cells!(0), 0, 0],
-		}
-
-		#[test]
-		#[should_panic]
-		fn test_0() {
-			let mut board = ConnectFour::new(create_cells!(0, 7, 14, 21, 28, 35));
-			board.add(0, 0, Player::Human);
+			test_0: [create_cells!(0, 7, 14, 21, 28, 35), 0, 0],
 		}
 
 		macro_rules! generate_test {
@@ -988,7 +982,103 @@ mod tests {
 		}
 	}
 
-	// TODO: min assertions
-	// TODO: max assertions
-	// TODO: max_top assertions
+	mod min {
+		use super::super::*;
+
+		macro_rules! test_panic {
+			($($name:ident: [$cells:expr, $offset:expr, $remaining:expr, $alpha:expr, $beta:expr],)*) => ($(
+				#[test]
+				#[should_panic]
+				fn $name() {
+					let mut board = ConnectFour::new($cells);
+					board.min($offset, $remaining, $alpha, $beta);
+				}
+			)*);
+		}
+
+		test_panic! {
+			test_out_of_range_over: [create_cells!(), 42, 42, 0, 0],
+			test_invalid_offset: [create_cells!(0), 1, 1, 0, 0],
+		}
+
+		macro_rules! generate_test {
+			($($name:ident: [$cells:expr, $outcome:expr, $offset:expr, $remaining:expr, $alpha:expr, $beta:expr],)*) => ($(
+				#[test]
+				fn $name() {
+					let mut board = ConnectFour::new($cells);
+					let min = board.min($offset, $remaining, $alpha, $beta);
+
+					assert_eq!(min, $outcome);
+				}
+			)*);
+		}
+
+		generate_test! {
+			test_machine_wins: [create_cells!(0, 1, 2, 3), OUTCOME_MACHINE_WINS, 0, 42, 0, 0],
+			test_draw: [create_cells!(0), OUTCOME_DRAW, 0, 0, 0, 0],
+		}
+	}
+
+	mod max {
+		use super::super::*;
+
+		macro_rules! test_panic {
+			($($name:ident: [$cells:expr, $offset:expr, $remaining:expr, $alpha:expr, $beta:expr],)*) => ($(
+				#[test]
+				#[should_panic]
+				fn $name() {
+					let mut board = ConnectFour::new($cells);
+					board.max($offset, $remaining, $alpha, $beta);
+				}
+			)*);
+		}
+
+		test_panic! {
+			test_out_of_range_over: [create_cells!(), 42, 42, 0, 0],
+			test_invalid_offset: [create_cells!(0), 1, 1, 0, 0],
+		}
+
+		macro_rules! generate_test {
+			($($name:ident: [$cells:expr, $outcome:expr, $offset:expr, $remaining:expr, $alpha:expr, $beta:expr],)*) => ($(
+				#[test]
+				fn $name() {
+					let mut board = ConnectFour::new($cells);
+					let max = board.max($offset, $remaining, $alpha, $beta);
+
+					assert_eq!(max, $outcome);
+				}
+			)*);
+		}
+
+		generate_test! {
+			test_human_wins: [create_cells!(0, 1, 2, 3), OUTCOME_HUMAN_WINS, 0, 42, 0, 0],
+			test_draw: [create_cells!(0), OUTCOME_DRAW, 0, 0, 0, 0],
+		}
+	}
+
+	mod max_top {
+		use super::super::*;
+
+		macro_rules! generate_test {
+			($($name:ident: [$cells:expr, $outcome:expr],)*) => ($(
+				#[test]
+				fn $name() {
+					let mut board = ConnectFour::new($cells);
+					let max = board.max_top(7);
+
+					assert_eq!(max, $outcome);
+				}
+			)*);
+		}
+
+		generate_test! {
+			// this case isn't very accurate considering an empty board would always give 3
+			// but cause we're testing max_top rather than get_best_move, that hardcoded choice doesn't happen
+			test_empty_board: [create_cells!(), 0],
+			test_stop_horizontal_winning_move: [create_cells!(0, 1, 2), 3],
+			test_stop_vertical_winning_move: [create_cells!(7, 14, 28), 0],
+			test_stop_tl_br_winning_move: [create_cells!(0, 8, 16, 31), 3],
+			test_stop_bl_tr_winning_move: [create_cells!(21, 15, 9, 10), 3],
+		}
+	}
 }
