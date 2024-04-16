@@ -103,6 +103,9 @@
 		"*.@(js|ts|tsx|yml|yaml|md|json)": [
 			"prettier --write"
 		],
+		".rs": [
+			"cargo +nightly fmt"
+		],
 		"*.toml": [
 			"taplo format"
 		]
