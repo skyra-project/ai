@@ -1,106 +1,102 @@
 {
-  "name": "@skyra/ai",
-  "version": "1.2.0",
-  "description": "Lightning-fast AI for Skyra Project's games",
-  "author": "kyranet <kyradiscord@gmail.com>",
-  "license": "MIT",
-  "main": "index.cjs",
-  "module": "index.mjs",
-  "types": "index.d.ts",
-  "exports": {
-    "require": "./index.cjs",
-    "import": "./index.mjs",
-    "types": "./index.d.ts"
-  },
-  "sideEffects": false,
-  "scripts": {
-    "test": "run-p \"test:node\" \"test:rust\"",
-    "test:node": "vitest --run",
-    "test:rust": "cargo test",
-    "fmt": "run-p \"fmt:node\" \"fmt:rust\"",
-    "fmt:node": "prettier --write .github npm tests index.cjs index.mjs index.d.ts",
-    "fmt:rust": "cargo +nightly fmt",
-    "clean": "node scripts/clean.mjs",
-    "artifacts": "napi artifacts",
-    "build": "napi build --platform --release --js index.cjs --pipe \"prettier -w\"",
-    "build:debug": "napi build --platform --js index.cjs --pipe \"prettier -w\"",
-    "update": "yarn upgrade-interactive",
-    "prepublishOnly": "napi prepublish -t npm",
-    "prepare": "husky install .github/husky",
-    "version": "napi version"
-  },
-  "napi": {
-    "name": "ai",
-    "triples": {
-      "defaults": true,
-      "additional": [
-        "x86_64-unknown-linux-musl",
-        "aarch64-unknown-linux-gnu",
-        "armv7-unknown-linux-gnueabihf",
-        "aarch64-apple-darwin",
-        "aarch64-linux-android",
-        "x86_64-unknown-freebsd",
-        "aarch64-unknown-linux-musl",
-        "aarch64-pc-windows-msvc",
-        "armv7-linux-androideabi"
-      ]
-    }
-  },
-  "devDependencies": {
-    "@commitlint/cli": "^19.2.2",
-    "@commitlint/config-conventional": "^19.2.2",
-    "@napi-rs/cli": "^2.18.1",
-    "@sapphire/prettier-config": "^2.0.0",
-    "@types/node": "^20.12.7",
-    "@vitest/coverage-v8": "^1.5.0",
-    "husky": "^8.0.3",
-    "npm-run-all": "^4.1.5",
-    "prettier": "^3.2.5",
-    "pretty-quick": "^4.0.0",
-    "vitest": "^1.5.0"
-  },
-  "resolutions": {
-    "minimist": "^1.2.6"
-  },
-  "files": [
-    "index.cjs",
-    "index.mjs",
-    "index.d.ts"
-  ],
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/skyra-project/ai.git"
-  },
-  "bugs": {
-    "url": "https://github.com/skyra-project/ai/issues"
-  },
-  "keywords": [
-    "discord.js",
-    "bot",
-    "standalone"
-  ],
-  "engines": {
-    "node": ">= v16"
-  },
-  "commitlint": {
-    "extends": [
-      "@commitlint/config-conventional"
-    ]
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "prettier": "@sapphire/prettier-config",
-  "packageManager": "yarn@3.6.1",
-  "optionalDependencies": {
-    "@skyra/ai-win32-x64-msvc": "1.2.0",
-    "@skyra/ai-darwin-x64": "1.2.0",
-    "@skyra/ai-linux-x64-gnu": "1.2.0",
-    "@skyra/ai-linux-arm-gnueabihf": "1.2.0",
-    "@skyra/ai-linux-x64-musl": "1.2.0",
-    "@skyra/ai-linux-arm64-gnu": "1.2.0",
-    "@skyra/ai-linux-arm64-musl": "1.2.0",
-    "@skyra/ai-darwin-arm64": "1.2.0",
-    "@skyra/ai-android-arm64": "1.2.0"
-  }
+	"name": "@skyra/ai",
+	"version": "1.2.0",
+	"description": "Lightning-fast AI for Skyra Project's games",
+	"author": "kyranet <kyradiscord@gmail.com>",
+	"license": "MIT",
+	"main": "index.cjs",
+	"module": "index.mjs",
+	"types": "index.d.ts",
+	"type": "module",
+	"exports": {
+		"import": {
+			"types": "./index.d.ts",
+			"default": "./index.mjs"
+		},
+		"require": {
+			"types": "./index.d.ts",
+			"default": "./index.cjs"
+		}
+	},
+	"files": [
+		"index.cjs",
+		"index.mjs",
+		"index.d.ts"
+	],
+	"sideEffects": false,
+	"scripts": {
+		"test": "run-p \"test:node\" \"test:rust\"",
+		"test:node": "vitest --run",
+		"test:rust": "cargo test",
+		"fmt": "run-p \"fmt:node\" \"fmt:rust\"",
+		"fmt:node": "prettier --write .github npm tests index.cjs index.mjs index.d.ts",
+		"fmt:rust": "cargo +nightly fmt",
+		"clean": "node scripts/clean.mjs",
+		"artifacts": "napi artifacts",
+		"build": "napi build --platform --release --js index.cjs --pipe \"prettier -w\"",
+		"build:debug": "napi build --platform --js index.cjs --pipe \"prettier -w\"",
+		"update": "yarn upgrade-interactive",
+		"prepublishOnly": "napi prepublish -t npm",
+		"version": "napi version"
+	},
+	"napi": {
+		"name": "ai",
+		"triples": {
+			"defaults": true,
+			"additional": [
+				"x86_64-unknown-linux-musl",
+				"aarch64-unknown-linux-gnu",
+				"armv7-unknown-linux-gnueabihf",
+				"aarch64-apple-darwin",
+				"aarch64-linux-android",
+				"x86_64-unknown-freebsd",
+				"aarch64-unknown-linux-musl",
+				"aarch64-pc-windows-msvc",
+				"armv7-linux-androideabi"
+			]
+		}
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^19.2.2",
+		"@commitlint/config-conventional": "^19.2.2",
+		"@napi-rs/cli": "^2.18.1",
+		"@sapphire/prettier-config": "^2.0.0",
+		"@types/node": "^20.12.7",
+		"@vitest/coverage-v8": "^1.5.0",
+		"npm-run-all": "^4.1.5",
+		"prettier": "^3.2.5",
+		"pretty-quick": "^4.0.0",
+		"vitest": "^1.5.0"
+	},
+	"resolutions": {
+		"minimist": "^1.2.6"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/skyra-project/ai.git"
+	},
+	"bugs": {
+		"url": "https://github.com/skyra-project/ai/issues"
+	},
+	"keywords": [
+		"discord.js",
+		"bot",
+		"standalone"
+	],
+	"engines": {
+		"node": ">= v16"
+	},
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		]
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"prettier": "@sapphire/prettier-config",
+	"eslintConfig": {
+		"extends": "@sapphire"
+	},
+	"packageManager": "yarn@4.1.1"
 }
