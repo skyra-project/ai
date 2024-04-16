@@ -28,9 +28,9 @@ impl TicTacToe {
 
 	fn status_horizontal(&self, cell: usize) -> bool {
 		match cell {
-			0 | 1 | 2 => many_eq!(self.cells[0], self.cells[1], self.cells[2]),
-			3 | 4 | 5 => many_eq!(self.cells[3], self.cells[4], self.cells[5]),
-			6 | 7 | 8 => many_eq!(self.cells[6], self.cells[7], self.cells[8]),
+			0..=2 => many_eq!(self.cells[0], self.cells[1], self.cells[2]),
+			3..=5 => many_eq!(self.cells[3], self.cells[4], self.cells[5]),
+			6..=8 => many_eq!(self.cells[6], self.cells[7], self.cells[8]),
 			_ => unsafe { std::hint::unreachable_unchecked() },
 		}
 	}
