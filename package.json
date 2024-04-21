@@ -57,7 +57,7 @@
 	"devDependencies": {
 		"@commitlint/cli": "^19.2.2",
 		"@commitlint/config-conventional": "^19.2.2",
-		"@napi-rs/cli": "^2.18.1",
+		"@napi-rs/cli": "^2.18.2",
 		"@sapphire/eslint-config": "^5.0.4",
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.1",
@@ -71,7 +71,7 @@
 		"vitest": "^1.5.0"
 	},
 	"resolutions": {
-		"minimist": "^1.2.6"
+		"minimist": "^1.2.8"
 	},
 	"repository": {
 		"type": "git",
