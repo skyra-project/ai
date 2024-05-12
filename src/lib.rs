@@ -16,6 +16,16 @@ pub enum Player {
 	Machine,
 }
 
+impl Player {
+	pub(crate) fn opponent(&self) -> Self {
+		match self {
+			Player::Human => Player::Machine,
+			Player::Machine => Player::Human,
+			_ => Player::Unset,
+		}
+	}
+}
+
 impl TryFrom<u8> for Player {
 	type Error = &'static str;
 

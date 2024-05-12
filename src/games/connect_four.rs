@@ -8,9 +8,8 @@ pub const BOARD_WIDTH: usize = 7;
 pub const BOARD_HEIGHT: usize = 6;
 pub const BOARD_CELLS: usize = BOARD_WIDTH * BOARD_HEIGHT;
 
-const OUTCOME_HUMAN_WINS: i8 = -20;
-const OUTCOME_MACHINE_WINS: i8 = 20;
-const OUTCOME_DRAW: i8 = 0;
+const OUTCOME_HUMAN_WINS: i32 = i32::MIN;
+const OUTCOME_MACHINE_WINS: i32 = i32::MAX;
 
 const AVAILABLE_BOTTOM: [u8; BOARD_CELLS] = [
 	0b0011, 0b0011, 0b0011, 0b0011, 0b0011, 0b0011, 0b0011, //
@@ -228,14 +227,110 @@ impl ConnectFour {
 		self.cells[offset] = Player::Unset;
 	}
 
+	fn evaluate_window(&self, window: &[Player; 4], player: Player) -> i32 {
+		let mut score = 0;
+		let opponent = player.opponent();
+
+		let count_player = window.iter().filter(|&&v| v == player).count();
+		let count_opponent = window.iter().filter(|&&v| v == opponent).count();
+		let count_empty = window.iter().filter(|&&v| v == Player::Unset).count();
+
+		if count_player == 4 {
+			score += 100;
+		} else if count_player == 3 && count_empty == 1 {
+			score += 5;
+		} else if count_player == 2 && count_empty == 2 {
+			score += 2;
+		}
+
+		if count_opponent == 3 && count_empty == 1 {
+			score -= 4;
+		}
+
+		score
+	}
+
+	fn score_position(&self, player: Player) -> i32 {
+		let mut score = 0;
+
+		// Score center column
+		const CENTER_COLUMN_ARRAY: [usize; BOARD_HEIGHT] = [
+			3, //
+			3 + BOARD_WIDTH,
+			3 + BOARD_WIDTH * 2,
+			3 + BOARD_WIDTH * 3,
+			3 + BOARD_WIDTH * 4,
+			3 + BOARD_WIDTH * 5,
+		];
+		for &cell in CENTER_COLUMN_ARRAY.iter() {
+			if self.cells[cell] == player {
+				score += 3;
+			}
+		}
+
+		// Score Horizontal
+		for row in 0..BOARD_HEIGHT {
+			for col in 0..BOARD_WIDTH - 3 {
+				let window = [
+					self.cells[row * BOARD_WIDTH + col],
+					self.cells[row * BOARD_WIDTH + col + 1],
+					self.cells[row * BOARD_WIDTH + col + 2],
+					self.cells[row * BOARD_WIDTH + col + 3],
+				];
+				score += self.evaluate_window(&window, player);
+			}
+		}
+
+		// Score Vertical
+		for col in 0..BOARD_WIDTH {
+			for row in 0..BOARD_HEIGHT - 3 {
+				let window = [
+					self.cells[row * BOARD_WIDTH + col],
+					self.cells[(row + 1) * BOARD_WIDTH + col],
+					self.cells[(row + 2) * BOARD_WIDTH + col],
+					self.cells[(row + 3) * BOARD_WIDTH + col],
+				];
+				score += self.evaluate_window(&window, player);
+			}
+		}
+
+		// Score positive sloped diagonal
+		for row in 0..BOARD_HEIGHT - 3 {
+			for col in 0..BOARD_WIDTH - 3 {
+				let window = [
+					self.cells[row * BOARD_WIDTH + col],
+					self.cells[(row + 1) * BOARD_WIDTH + col + 1],
+					self.cells[(row + 2) * BOARD_WIDTH + col + 2],
+					self.cells[(row + 3) * BOARD_WIDTH + col + 3],
+				];
+				score += self.evaluate_window(&window, player);
+			}
+		}
+
+		// Score negative sloped diagonal
+		for row in 0..BOARD_HEIGHT - 3 {
+			for col in 0..BOARD_WIDTH - 3 {
+				let window = [
+					self.cells[row * BOARD_WIDTH + col + 3],
+					self.cells[(row + 1) * BOARD_WIDTH + col + 2],
+					self.cells[(row + 2) * BOARD_WIDTH + col + 1],
+					self.cells[(row + 3) * BOARD_WIDTH + col],
+				];
+				score += self.evaluate_window(&window, player);
+			}
+		}
+
+		score
+	}
+
 	/// Minimum is `Player::Human`
-	fn min(&mut self, last_cell_offset: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
+	fn min(&mut self, last_cell_offset: usize, remaining: u8, alpha: i32, beta: i32) -> i32 {
 		if self.status(last_cell_offset) {
 			return OUTCOME_MACHINE_WINS;
 		}
 
 		if remaining == 0 {
-			return OUTCOME_DRAW;
+			return self.score_position(Player::Human);
 		}
 
 		// Possible values for min_v are:
@@ -244,7 +339,7 @@ impl ConnectFour {
 		//  1 - loss
 		//
 		// We're initially setting it to 2 as worse than the worst case:
-		let mut min_v = i8::MAX;
+		let mut min_v = i32::MAX;
 		let mut local_beta = beta;
 
 		for c in 0..BOARD_WIDTH {
@@ -278,13 +373,13 @@ impl ConnectFour {
 	}
 
 	/// Maximum is `Player::Machine`
-	fn max(&mut self, last_cell_offset: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
+	fn max(&mut self, last_cell_offset: usize, remaining: u8, alpha: i32, beta: i32) -> i32 {
 		if self.status(last_cell_offset) {
 			return OUTCOME_HUMAN_WINS;
 		}
 
 		if remaining == 0 {
-			return OUTCOME_DRAW;
+			return self.score_position(Player::Machine);
 		}
 
 		// Possible values for max_v are:
@@ -293,7 +388,7 @@ impl ConnectFour {
 		//  1 - win
 		//
 		// We're initially setting it to -2 as worse than the worst case:
-		let mut max_v = i8::MIN;
+		let mut max_v = i32::MIN;
 		let mut local_alpha = alpha;
 
 		for c in 0..BOARD_WIDTH {
@@ -331,10 +426,10 @@ impl ConnectFour {
 			return U_INVALID_INDEX;
 		}
 
-		const DEFAULT_ALPHA: i8 = i8::MIN;
-		const DEFAULT_BETA: i8 = i8::MAX;
+		const DEFAULT_ALPHA: i32 = i32::MIN;
+		const DEFAULT_BETA: i32 = i32::MAX;
 
-		let mut max_v = i8::MIN;
+		let mut max_v = i32::MIN;
 		let mut column = U_INVALID_INDEX;
 		for c in 0..BOARD_WIDTH {
 			if !self.available(c) {
@@ -357,7 +452,7 @@ impl ConnectFour {
 				column = c;
 
 				// Break the loop earlier if we have found a winning move:
-				if points >= OUTCOME_MACHINE_WINS {
+				if points >= 100 {
 					break;
 				}
 			}
@@ -1015,7 +1110,7 @@ mod tests {
 
 		generate_test! {
 			test_machine_wins: [create_cells!(0, 1, 2, 3), OUTCOME_MACHINE_WINS, 0, 42, 0, 0],
-			test_draw: [create_cells!(0), OUTCOME_DRAW, 0, 0, 0, 0],
+			test_draw: [create_cells!(0), 0, 0, 0, 0, 0],
 		}
 	}
 
@@ -1052,7 +1147,7 @@ mod tests {
 
 		generate_test! {
 			test_human_wins: [create_cells!(0, 1, 2, 3), OUTCOME_HUMAN_WINS, 0, 42, 0, 0],
-			test_draw: [create_cells!(0), OUTCOME_DRAW, 0, 0, 0, 0],
+			test_draw: [create_cells!(0), 0, 0, 0, 0, 0],
 		}
 	}
 
@@ -1064,7 +1159,7 @@ mod tests {
 				#[test]
 				fn $name() {
 					let mut board = ConnectFour::new($cells);
-					let max = board.max_top(7);
+					let max = board.max_top(3);
 
 					assert_eq!(max, $outcome);
 				}
@@ -1072,13 +1167,41 @@ mod tests {
 		}
 
 		generate_test! {
-			// this case isn't very accurate considering an empty board would always give 3
-			// but cause we're testing max_top rather than get_best_move, that hardcoded choice doesn't happen
-			test_empty_board: [create_cells!(), 0],
-			test_stop_horizontal_winning_move: [create_cells!(0, 1, 2), 3],
-			test_stop_vertical_winning_move: [create_cells!(7, 14, 28), 0],
-			test_stop_tl_br_winning_move: [create_cells!(0, 8, 16, 31), 3],
-			test_stop_bl_tr_winning_move: [create_cells!(21, 15, 9, 10), 3],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ _ _ _ _ _ (28..35)
+			// _ _ _ v _ _ _ (35..42)
+			test_empty_board: [create_cells!(), 3],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ _ _ _ _ _ (28..35)
+			// H H H v _ _ _ (35..42)
+			test_stop_horizontal_winning_move: [create_cells!(35, 36, 37), 3],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// v _ _ _ _ _ _ (14..21)
+			// H _ _ _ _ _ _ (21..28)
+			// H _ _ _ _ _ _ (28..35)
+			// H _ _ _ _ _ _ (35..42)
+			test_stop_vertical_winning_move: [create_cells!(21, 28, 35), 0],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ H _ _ _ _ _ (14..21)
+			// _ _ H _ _ _ _ (21..28)
+			// _ _ _ H _ _ _ (28..35)
+			// _ _ _ _ v _ _ (35..42)
+			test_stop_tl_br_winning_move: [create_cells!(15, 23, 31), 4],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ H _ _ (14..21)
+			// _ _ _ H _ _ _ (21..28)
+			// _ _ H _ _ _ _ (28..35)
+			// _ v _ _ _ _ _ (35..42)
+			test_stop_bl_tr_winning_move: [create_cells!(18, 24, 30), 1],
 		}
 	}
 }
