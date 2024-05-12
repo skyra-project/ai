@@ -1,4 +1,8 @@
 #![deny(clippy::all)]
+#![feature(portable_simd)]
+#![feature(iter_map_windows)]
+
+use std::mem::transmute;
 
 #[macro_use]
 extern crate napi_derive;
@@ -16,13 +20,9 @@ pub enum Player {
 	Machine,
 }
 
-impl Player {
-	pub(crate) fn opponent(&self) -> Self {
-		match self {
-			Player::Human => Player::Machine,
-			Player::Machine => Player::Human,
-			_ => Player::Unset,
-		}
+impl From<Player> for i8 {
+	fn from(value: Player) -> Self {
+		unsafe { transmute(value) }
 	}
 }
 
