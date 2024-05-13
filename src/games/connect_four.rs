@@ -99,6 +99,21 @@ macro_rules! check_offsets {
 	};
 }
 
+/// Converts a 4-bit bit mask in the form of a [`Mask`] to a count of the number
+/// of bits set to 1, which is used to determine the number of empty and player
+/// pieces in a window.
+///
+/// # Remarks
+///
+/// This function does not use `.count_ones()` because it produces more
+/// instructions, leading to a slower implementation. Because the number of
+/// possible bit masks is small, this function is implemented as a match
+/// statement.
+///
+/// # Safety
+///
+/// Undefined behaviour is caused if the bitmask is not a valid 4-bit bitmask,
+/// which is guaranteed by the [`Mask`] type.
 fn bitmask_to_count(mask: Mask<i8, 4>) -> u8 {
 	match mask.to_bitmask() {
 		0b0000 => 0,
