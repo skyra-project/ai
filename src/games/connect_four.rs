@@ -247,7 +247,7 @@ impl ConnectFour {
 		const MASK_HUMAN: Simd<i8, 4> = i8x4::from_array([Player::Human as i8; 4]);
 		const MASK_MACHINE: Simd<i8, 4> = i8x4::from_array([Player::Machine as i8; 4]);
 
-		let v = i8x4::from_array(i.map(|x| unsafe { (*self.cells.get_unchecked(x)).try_into().unwrap_unchecked() }));
+		let v = i8x4::from_array(i.map(|x| unsafe { *self.cells.get_unchecked(x) }.into()));
 		let player_mask = if player == Player::Human { MASK_HUMAN } else { MASK_MACHINE };
 
 		let empty_pieces = bitmask_to_count(v.simd_eq(MASK_EMPTY));
@@ -263,38 +263,38 @@ impl ConnectFour {
 		let mask: u8 = (player_pieces << 3) | empty_pieces;
 		match mask {
 			// 4 player pieces: (winning move, cannot happen here)
-			0b100_000 => unsafe { unreachable_unchecked() },
+			0o4_0 => unsafe { unreachable_unchecked() },
 
 			// 3 player pieces:
 			// - 1 empty piece (0 opponent pieces)
-			0b011_001 => 100,
+			0o3_1 => 100,
 			// - 0 empty pieces (1 opponent pieces)
-			0b011_000 => 0,
+			0o3_0 => 0,
 
 			// 2 player pieces:
 			// - 2 empty pieces (0 opponent pieces)
-			0b010_010 => 10,
+			0o2_2 => 10,
 			// - 1 empty piece (1 opponent piece)
 			// - 0 empty pieces (2 opponent pieces)
-			0b010_001 | 0b010_000 => 0,
+			0o2_1 | 0o2_0 => 0,
 
 			// 1 player piece:
 			// - 0 empty pieces (3 opponent pieces)
 			// - 1 empty piece (2 opponent pieces)
 			// - 2 empty pieces (1 opponent piece)
 			// - 3 empty pieces (0 opponent pieces)
-			0b001_000 | 0b001_001 | 0b001_010 | 0b001_011 => 0,
+			0o1_0..=0o1_3 => 0,
 
 			// 0 player pieces:
 			// - 0 empty pieces (losing move, cannot happen here)
-			0b000_000 => unsafe { unreachable_unchecked() },
+			0o0_0 => unsafe { unreachable_unchecked() },
 			// - 1 empty piece (3 opponent pieces)
-			0b000_001 => -100,
+			0o0_1 => -100,
 			// - 2 empty pieces (2 opponent pieces)
-			0b000_010 => -10,
+			0o0_2 => -10,
 			// - 3 empty pieces (1 opponent piece)
 			// - 4 empty pieces (0 opponent pieces)
-			0b000_011 | 0b000_100 => 0,
+			0o0_3 | 0o0_4 => 0,
 
 			// This should never happen:
 			_ => unsafe { unreachable_unchecked() },
@@ -1223,22 +1223,23 @@ mod tests {
 		}
 	}
 
+	macro_rules! generate_score_test {
+		($score:ident $($name:ident: [$cells:expr, $outcome:expr],)*) => ($(
+			#[test]
+			fn $name() {
+				let board = ConnectFour::new($cells);
+				let score = board.$score(Player::Human);
+				assert_eq!(score, $outcome);
+			}
+		)*);
+	}
+
 	mod score_position_center_column {
 		use super::super::*;
 
-		macro_rules! generate_test {
-			($($name:ident: [$cells:expr, $outcome:expr],)*) => ($(
-				#[test]
-				fn $name() {
-					let board = ConnectFour::new($cells);
-					let score = board.score_position_center_column(Player::Human);
+		generate_score_test! {
+			score_position_center_column
 
-					assert_eq!(score, $outcome);
-				}
-			)*);
-		}
-
-		generate_test! {
 			// _ _ _ _ _ _ _ (0..7)
 			// _ _ _ _ _ _ _ (7..14)
 			// _ _ _ _ _ _ _ (14..21)
@@ -1273,19 +1274,9 @@ mod tests {
 	mod score_position_horizontal {
 		use super::super::*;
 
-		macro_rules! generate_test {
-			($($name:ident: [$cells:expr, $outcome:expr],)*) => ($(
-				#[test]
-				fn $name() {
-					let board = ConnectFour::new($cells);
-					let score = board.score_position_horizontal(Player::Human);
+		generate_score_test! {
+			score_position_horizontal
 
-					assert_eq!(score, $outcome);
-				}
-			)*);
-		}
-
-		generate_test! {
 			// _ _ _ _ _ _ _ (0..7)
 			// _ _ _ _ _ _ _ (7..14)
 			// _ _ _ _ _ _ _ (14..21)
@@ -1320,19 +1311,9 @@ mod tests {
 	mod score_position_vertical {
 		use super::super::*;
 
-		macro_rules! generate_test {
-			($($name:ident: [$cells:expr, $outcome:expr],)*) => ($(
-				#[test]
-				fn $name() {
-					let board = ConnectFour::new($cells);
-					let score = board.score_position_vertical(Player::Human);
+		generate_score_test! {
+			score_position_vertical
 
-					assert_eq!(score, $outcome);
-				}
-			)*);
-		}
-
-		generate_test! {
 			// _ _ _ _ _ _ _ (0..7)
 			// _ _ _ _ _ _ _ (7..14)
 			// _ _ _ _ _ _ _ (14..21)
