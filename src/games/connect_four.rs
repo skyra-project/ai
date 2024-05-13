@@ -99,6 +99,36 @@ macro_rules! check_offsets {
 	};
 }
 
+/// Makes an array of offsets based on a base offset and a multiplier.
+///
+/// This macro is used to generate the offsets for the various directions in the
+/// Connect Four game board.
+///
+/// # Example
+///
+/// ```rust
+/// let offsets = make_offset_array!(BOARD_WIDTH + 1, 0);
+/// assert_eq!(offsets, [0, 8, 16, 24, 32, 40]);
+/// ```
+///
+/// Which is equivalent to:
+///
+/// ```rust
+/// let offsets = [
+/// 	0, //
+/// 	0 + (BOARD_WIDTH + 1) * 1, // BOARD_WIDTH + 1
+/// 	0 + (BOARD_WIDTH + 1) * 2, // BOARD_WIDTH * 2 + 2,
+/// 	0 + (BOARD_WIDTH + 1) * 3, // BOARD_WIDTH * 3 + 3,
+/// 	0 + (BOARD_WIDTH + 1) * 4, // BOARD_WIDTH * 4 + 4,
+/// 	0 + (BOARD_WIDTH + 1) * 5, // BOARD_WIDTH * 5 + 5,
+/// ];
+/// ```
+macro_rules! make_offset_array {
+	($offset:expr, $base:expr) => {
+		[$base, $base + $offset * 1, $base + $offset * 2, $base + $offset * 3, $base + $offset * 4, $base + $offset * 5]
+	};
+}
+
 /// Converts a 4-bit bit mask in the form of a [`Mask`] to a count of the number
 /// of bits set to 1, which is used to determine the number of empty and player
 /// pieces in a window.
@@ -327,14 +357,7 @@ impl ConnectFour {
 	}
 
 	fn score_position_center_column(&self, player: Player) -> i32 {
-		const OFFSETS: [usize; BOARD_HEIGHT] = [
-			3, //
-			3 + BOARD_WIDTH,
-			3 + BOARD_WIDTH * 2,
-			3 + BOARD_WIDTH * 3,
-			3 + BOARD_WIDTH * 4,
-			3 + BOARD_WIDTH * 5,
-		];
+		const OFFSETS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH, 3);
 
 		let mut score = 0;
 		for &index in &OFFSETS {
@@ -347,14 +370,7 @@ impl ConnectFour {
 	}
 
 	fn score_position_horizontal(&self, player: Player) -> i32 {
-		const POSITIONS: [usize; BOARD_HEIGHT] = [
-			0, //
-			BOARD_WIDTH,
-			BOARD_WIDTH * 2,
-			BOARD_WIDTH * 3,
-			BOARD_WIDTH * 4,
-			BOARD_WIDTH * 5,
-		];
+		const POSITIONS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH, 0);
 		const OFFSETS: [usize; BOARD_WIDTH] = [0, 1, 2, 3, 4, 5, 6];
 
 		let mut score = 0;
@@ -366,14 +382,7 @@ impl ConnectFour {
 	}
 
 	fn score_position_vertical(&self, player: Player) -> i32 {
-		const OFFSETS: [usize; BOARD_HEIGHT] = [
-			0, //
-			BOARD_WIDTH,
-			BOARD_WIDTH * 2,
-			BOARD_WIDTH * 3,
-			BOARD_WIDTH * 4,
-			BOARD_WIDTH * 5,
-		];
+		const OFFSETS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH, 0);
 
 		let mut score = 0;
 		for column in 0..BOARD_WIDTH {
@@ -384,14 +393,7 @@ impl ConnectFour {
 	}
 
 	fn score_position_diagonal_tl(&self, player: Player) -> i32 {
-		const OFFSETS: [usize; BOARD_HEIGHT] = [
-			0, //
-			BOARD_WIDTH + 1,
-			BOARD_WIDTH * 2 + 2,
-			BOARD_WIDTH * 3 + 3,
-			BOARD_WIDTH * 4 + 4,
-			BOARD_WIDTH * 5 + 5,
-		];
+		const OFFSETS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH + 1, 0);
 
 		let mut score = 0;
 
@@ -435,14 +437,7 @@ impl ConnectFour {
 	}
 
 	fn score_position_diagonal_tr(&self, player: Player) -> i32 {
-		const OFFSETS: [usize; BOARD_HEIGHT] = [
-			0, //
-			BOARD_WIDTH - 1,
-			BOARD_WIDTH * 2 - 2,
-			BOARD_WIDTH * 3 - 3,
-			BOARD_WIDTH * 4 - 4,
-			BOARD_WIDTH * 5 - 5,
-		];
+		const OFFSETS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH - 1, 0);
 		let mut score = 0;
 
 		// Calculate the score for 6-long diagonals:
