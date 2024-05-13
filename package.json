@@ -31,7 +31,7 @@
 		"format": "run-p format:prettier format:rs format:toml",
 		"format:prettier": "prettier . -w",
 		"format:toml": "taplo format",
-		"format:rs": "cargo +nightly fmt",
+		"format:rs": "cargo fmt",
 		"lint": "eslint .",
 		"prepublishOnly": "napi prepublish -t npm",
 		"test": "vitest run",

@@ -242,28 +242,62 @@ impl ConnectFour {
 		self.cells[offset] = Player::Unset;
 	}
 
-	fn evaluate_window(&self, player: Player, i0: usize, i1: usize, i2: usize, i3: usize) -> i32 {
+	fn evaluate_window(&self, player: Player, i: &[usize; 4]) -> i32 {
 		const MASK_EMPTY: Simd<i8, 4> = i8x4::from_array([Player::Unset as i8; 4]);
 		const MASK_HUMAN: Simd<i8, 4> = i8x4::from_array([Player::Human as i8; 4]);
 		const MASK_MACHINE: Simd<i8, 4> = i8x4::from_array([Player::Machine as i8; 4]);
 
-		let v = i8x4::from_array([
-			unsafe { *self.cells.get_unchecked(i0) }.into(),
-			unsafe { *self.cells.get_unchecked(i1) }.into(),
-			unsafe { *self.cells.get_unchecked(i2) }.into(),
-			unsafe { *self.cells.get_unchecked(i3) }.into(),
-		]);
-
+		let v = i8x4::from_array(i.map(|x| unsafe { (*self.cells.get_unchecked(x)).try_into().unwrap_unchecked() }));
 		let player_mask = if player == Player::Human { MASK_HUMAN } else { MASK_MACHINE };
 
 		let empty_pieces = bitmask_to_count(v.simd_eq(MASK_EMPTY));
 		let player_pieces = bitmask_to_count(v.simd_eq(player_mask));
-		match (player_pieces, empty_pieces) {
-			(4, _) => 99999,
-			(3, 1) => 100,
-			(2, 2) => 10,
-			(0, 3) => -100,
-			(_, _) => 0,
+
+		// The sum of empty and player pieces must be less than or equal to 4:
+		debug_assert!(empty_pieces + player_pieces <= 4);
+		// Winning moves will never call this function:
+		debug_assert_ne!(player_pieces, 4);
+		// Losing moves will never call this function:
+		debug_assert_ne!(player_pieces + empty_pieces, 0);
+
+		let mask: u8 = (player_pieces << 3) | empty_pieces;
+		match mask {
+			// 4 player pieces: (winning move, cannot happen here)
+			0b100_000 => unsafe { unreachable_unchecked() },
+
+			// 3 player pieces:
+			// - 1 empty piece (0 opponent pieces)
+			0b011_001 => 100,
+			// - 0 empty pieces (1 opponent pieces)
+			0b011_000 => 0,
+
+			// 2 player pieces:
+			// - 2 empty pieces (0 opponent pieces)
+			0b010_010 => 10,
+			// - 1 empty piece (1 opponent piece)
+			// - 0 empty pieces (2 opponent pieces)
+			0b010_001 | 0b010_000 => 0,
+
+			// 1 player piece:
+			// - 0 empty pieces (3 opponent pieces)
+			// - 1 empty piece (2 opponent pieces)
+			// - 2 empty pieces (1 opponent piece)
+			// - 3 empty pieces (0 opponent pieces)
+			0b001_000 | 0b001_001 | 0b001_010 | 0b001_011 => 0,
+
+			// 0 player pieces:
+			// - 0 empty pieces (losing move, cannot happen here)
+			0b000_000 => unsafe { unreachable_unchecked() },
+			// - 1 empty piece (3 opponent pieces)
+			0b000_001 => -100,
+			// - 2 empty pieces (2 opponent pieces)
+			0b000_010 => -10,
+			// - 3 empty pieces (1 opponent piece)
+			// - 4 empty pieces (0 opponent pieces)
+			0b000_011 | 0b000_100 => 0,
+
+			// This should never happen:
+			_ => unsafe { unreachable_unchecked() },
 		}
 	}
 
@@ -273,7 +307,7 @@ impl ConnectFour {
 
 		(0..amount)
 			.map(|x| index + offsets[x])
-			.map_windows(|window: &[usize; 4]| self.evaluate_window(player, window[0], window[1], window[2], window[3]))
+			.map_windows(|window: &[usize; 4]| self.evaluate_window(player, window))
 			.sum()
 	}
 
