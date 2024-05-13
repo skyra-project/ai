@@ -115,12 +115,12 @@ macro_rules! check_offsets {
 ///
 /// ```rust
 /// let offsets = [
-/// 	0, //
-/// 	0 + (BOARD_WIDTH + 1) * 1, // BOARD_WIDTH + 1
-/// 	0 + (BOARD_WIDTH + 1) * 2, // BOARD_WIDTH * 2 + 2,
-/// 	0 + (BOARD_WIDTH + 1) * 3, // BOARD_WIDTH * 3 + 3,
-/// 	0 + (BOARD_WIDTH + 1) * 4, // BOARD_WIDTH * 4 + 4,
-/// 	0 + (BOARD_WIDTH + 1) * 5, // BOARD_WIDTH * 5 + 5,
+///     0, //
+///     0 + (BOARD_WIDTH + 1) * 1, // BOARD_WIDTH + 1
+///     0 + (BOARD_WIDTH + 1) * 2, // BOARD_WIDTH * 2 + 2,
+///     0 + (BOARD_WIDTH + 1) * 3, // BOARD_WIDTH * 3 + 3,
+///     0 + (BOARD_WIDTH + 1) * 4, // BOARD_WIDTH * 4 + 4,
+///     0 + (BOARD_WIDTH + 1) * 5, // BOARD_WIDTH * 5 + 5,
 /// ];
 /// ```
 macro_rules! make_offset_array {
@@ -288,12 +288,12 @@ impl ConnectFour {
 	}
 
 	fn evaluate_window(&self, player: Player, i: &[usize; 4]) -> i32 {
+		debug_assert_ne!(player, Player::Unset);
+
 		const MASK_EMPTY: Simd<i8, 4> = i8x4::from_array([Player::Unset as i8; 4]);
-		const MASK_HUMAN: Simd<i8, 4> = i8x4::from_array([Player::Human as i8; 4]);
-		const MASK_MACHINE: Simd<i8, 4> = i8x4::from_array([Player::Machine as i8; 4]);
 
 		let v = i8x4::from_array(i.map(|x| unsafe { *self.cells.get_unchecked(x) }.into()));
-		let player_mask = if player == Player::Human { MASK_HUMAN } else { MASK_MACHINE };
+		let player_mask: Simd<i8, 4> = i8x4::from_array([player as i8; 4]);
 
 		let empty_pieces = bitmask_to_count(v.simd_eq(MASK_EMPTY));
 		let player_pieces = bitmask_to_count(v.simd_eq(player_mask));
