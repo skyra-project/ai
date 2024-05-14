@@ -305,40 +305,46 @@ impl ConnectFour {
 		// Losing moves will never call this function:
 		debug_assert_ne!(player_pieces + empty_pieces, 0);
 
+		// The mask is a 6-bit number, where the first 3 bits represent the
+		// number of player pieces, and the last 3 bits represent the number of
+		// empty pieces.
+		//
+		// Since the player pieces, opponent pieces, and empty pieces are
+		// mutually exclusive and always sum to 4, these are the only fields
+		// required.
+		//
+		// For example, if there are no player pieces, and 1 empty piece, there
+		// must be 3 opponent pieces, which is represented as `0b0_1`.
+		//
+		// The numbers are represented in octal form, where the first digit is
+		// the number of player pieces, and the second digit is the number of
+		// empty pieces.
+		//
+		// There can only be up to 4 empty pieces, and up to 3 pieces for the
+		// player or the opponent. As a 4th piece for the player or the opponent
+		// would result in a win, which would not call this function, and
+		// therefore will never happen here.
 		let mask: u8 = (player_pieces << 3) | empty_pieces;
 		match mask {
 			// 4 player pieces: (winning move, cannot happen here)
 			0o4_0 => unsafe { unreachable_unchecked() },
 
 			// 3 player pieces:
-			// - 1 empty piece (0 opponent pieces)
 			0o3_1 => 100,
-			// - 0 empty pieces (1 opponent pieces)
 			0o3_0 => 0,
 
 			// 2 player pieces:
-			// - 2 empty pieces (0 opponent pieces)
 			0o2_2 => 10,
-			// - 1 empty piece (1 opponent piece)
-			// - 0 empty pieces (2 opponent pieces)
 			0o2_1 | 0o2_0 => 0,
 
 			// 1 player piece:
-			// - 0 empty pieces (3 opponent pieces)
-			// - 1 empty piece (2 opponent pieces)
-			// - 2 empty pieces (1 opponent piece)
-			// - 3 empty pieces (0 opponent pieces)
 			0o1_0..=0o1_3 => 0,
 
 			// 0 player pieces:
 			// - 0 empty pieces (losing move, cannot happen here)
 			0o0_0 => unsafe { unreachable_unchecked() },
-			// - 1 empty piece (3 opponent pieces)
 			0o0_1 => -100,
-			// - 2 empty pieces (2 opponent pieces)
 			0o0_2 => -10,
-			// - 3 empty pieces (1 opponent piece)
-			// - 4 empty pieces (0 opponent pieces)
 			0o0_3 | 0o0_4 => 0,
 
 			// This should never happen:
