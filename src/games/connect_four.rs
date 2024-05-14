@@ -1,7 +1,7 @@
 use std::{
 	cmp,
 	hint::unreachable_unchecked,
-	simd::{cmp::SimdPartialEq, i8x4, Mask, Simd},
+	simd::{cmp::SimdPartialEq, u8x4, Mask, Simd},
 };
 
 use napi::{bindgen_prelude::Uint8Array, Error, Result};
@@ -290,10 +290,10 @@ impl ConnectFour {
 	fn evaluate_window(&self, player: Player, i: &[usize; 4]) -> i32 {
 		debug_assert_ne!(player, Player::Unset);
 
-		const MASK_EMPTY: Simd<i8, 4> = i8x4::from_array([Player::Unset as i8; 4]);
+		const MASK_EMPTY: Simd<u8, 4> = u8x4::from_array([Player::Unset as u8; 4]);
 
-		let v = i8x4::from_array(i.map(|x| unsafe { *self.cells.get_unchecked(x) }.into()));
-		let player_mask: Simd<i8, 4> = i8x4::from_array([player as i8; 4]);
+		let v = u8x4::from_array(i.map(|x| unsafe { *self.cells.get_unchecked(x) }.into()));
+		let player_mask = u8x4::from_array([player as u8; 4]);
 
 		let empty_pieces = bitmask_to_count(v.simd_eq(MASK_EMPTY));
 		let player_pieces = bitmask_to_count(v.simd_eq(player_mask));
@@ -325,6 +325,8 @@ impl ConnectFour {
 		// would result in a win, which would not call this function, and
 		// therefore will never happen here.
 		let mask: u8 = (player_pieces << 3) | empty_pieces;
+
+		#[allow(clippy::manual_range_patterns)]
 		match mask {
 			// 4 player pieces: (winning move, cannot happen here)
 			0o4_0 => unsafe { unreachable_unchecked() },
@@ -338,7 +340,7 @@ impl ConnectFour {
 			0o2_1 | 0o2_0 => 0,
 
 			// 1 player piece:
-			0o1_0..=0o1_3 => 0,
+			0o1_0 | 0o1_1 | 0o1_2 | 0o1_3 => 0,
 
 			// 0 player pieces:
 			// - 0 empty pieces (losing move, cannot happen here)

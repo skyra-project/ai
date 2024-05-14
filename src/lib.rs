@@ -2,8 +2,6 @@
 #![feature(portable_simd)]
 #![feature(iter_map_windows)]
 
-use std::mem::transmute;
-
 #[macro_use]
 extern crate napi_derive;
 
@@ -13,6 +11,7 @@ mod games {
 }
 
 #[napi]
+#[repr(u8)]
 #[derive(Debug, PartialEq)]
 pub enum Player {
 	Unset,
@@ -20,9 +19,9 @@ pub enum Player {
 	Machine,
 }
 
-impl From<Player> for i8 {
+impl From<Player> for u8 {
 	fn from(value: Player) -> Self {
-		unsafe { transmute(value) }
+		unsafe { std::mem::transmute_copy(&value) }
 	}
 }
 
