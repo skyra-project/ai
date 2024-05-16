@@ -54,11 +54,15 @@ const AVAILABLE_DIAGONAL_BL: [u8; BOARD_CELLS] = [
 pub type AiCells = [Player; BOARD_CELLS];
 pub type AiRemaining = [u8; BOARD_WIDTH];
 
+const SCORE_PLAYER_MASK_HUMAN: Simd<u8, 4> = u8x4::from_array([Player::Human as u8; 4]);
+const SCORE_PLAYER_MASK_MACHINE: Simd<u8, 4> = u8x4::from_array([Player::Machine as u8; 4]);
+
 #[napi]
 pub struct ConnectFour {
 	cells: AiCells,
 	remaining: AiRemaining,
 	empty: u8,
+	score_player_mask: Simd<u8, 4>,
 }
 
 /// Checks a series of pointer offsets to see if any overlapping groups of 4 are
@@ -166,7 +170,7 @@ impl ConnectFour {
 		};
 		let empty = remaining.iter().sum();
 
-		Self { cells, remaining, empty }
+		Self { cells, remaining, empty, score_player_mask: SCORE_PLAYER_MASK_HUMAN }
 	}
 
 	#[allow(clippy::too_many_arguments)]
@@ -287,16 +291,14 @@ impl ConnectFour {
 		self.cells[offset] = Player::Unset;
 	}
 
-	fn evaluate_window(&self, player: Player, i: &[usize; 4]) -> i32 {
+	fn evaluate_window(&self, player: Player, window: &[u8; 4]) -> i32 {
 		debug_assert_ne!(player, Player::Unset);
 
 		const MASK_EMPTY: Simd<u8, 4> = u8x4::from_array([Player::Unset as u8; 4]);
 
-		let v = u8x4::from_array(i.map(|x| unsafe { *self.cells.get_unchecked(x) }.into()));
-		let player_mask = u8x4::from_array([player as u8; 4]);
-
+		let v = u8x4::from_slice(window);
 		let empty_pieces = bitmask_to_count(v.simd_eq(MASK_EMPTY));
-		let player_pieces = bitmask_to_count(v.simd_eq(player_mask));
+		let player_pieces = bitmask_to_count(v.simd_eq(self.score_player_mask));
 
 		// The sum of empty and player pieces must be less than or equal to 4:
 		debug_assert!(empty_pieces + player_pieces <= 4);
@@ -354,8 +356,8 @@ impl ConnectFour {
 		debug_assert!(amount <= offsets.len());
 
 		(0..amount)
-			.map(|x| index + offsets[x])
-			.map_windows(|window: &[usize; 4]| self.evaluate_window(player, window))
+			.map(|x| unsafe { *self.cells.get_unchecked(index + offsets[x]) }.into())
+			.map_windows(|window: &[u8; 4]| self.evaluate_window(player, window))
 			.sum()
 	}
 
@@ -494,6 +496,7 @@ impl ConnectFour {
 		}
 
 		if remaining == 0 {
+			self.score_player_mask = SCORE_PLAYER_MASK_HUMAN;
 			return self.score_position(Player::Human);
 		}
 
@@ -543,6 +546,7 @@ impl ConnectFour {
 		}
 
 		if remaining == 0 {
+			self.score_player_mask = SCORE_PLAYER_MASK_MACHINE;
 			return self.score_position(Player::Machine);
 		}
 
@@ -668,6 +672,7 @@ impl ConnectFour {
 				cells: [Player::Unset; BOARD_CELLS],
 				remaining: [BOARD_HEIGHT as u8; BOARD_WIDTH],
 				empty: BOARD_CELLS as u8,
+				score_player_mask: SCORE_PLAYER_MASK_HUMAN,
 			})
 		}
 	}
