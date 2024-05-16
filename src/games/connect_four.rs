@@ -305,25 +305,20 @@ impl ConnectFour {
 		// Losing moves will never call this function:
 		debug_assert_ne!(player_pieces + empty_pieces, 0);
 
-		// The mask is a 6-bit number, where the first 3 bits represent the
-		// number of player pieces, and the last 3 bits represent the number of
-		// empty pieces.
+		// The mask is a combined octal pair, where the first octal represents
+		// the number of player pieces, and the last octal represents the
+		// number of empty pieces.
 		//
 		// Since the player pieces, opponent pieces, and empty pieces are
-		// mutually exclusive and always sum to 4, these are the only fields
+		// mutually exclusive and sum to 4, these are the only fields
 		// required.
 		//
-		// For example, if there are no player pieces, and 1 empty piece, there
-		// must be 3 opponent pieces, which is represented as `0b0_1`.
+		// For example, if there are no player pieces and 1 empty piece, there
+		// must be 3 opponent pieces - a state represented as `0o0_1`.
 		//
-		// The numbers are represented in octal form, where the first digit is
-		// the number of player pieces, and the second digit is the number of
-		// empty pieces.
-		//
-		// There can only be up to 4 empty pieces, and up to 3 pieces for the
-		// player or the opponent. As a 4th piece for the player or the opponent
-		// would result in a win, which would not call this function, and
-		// therefore will never happen here.
+		// There can be up to 4 empty pieces, and up to 3 pieces for the
+		// player or the opponent, since a 4th piece would be a winning move
+		// and would not reach this function.
 		let mask: u8 = (player_pieces << 3) | empty_pieces;
 
 		#[allow(clippy::manual_range_patterns)]
