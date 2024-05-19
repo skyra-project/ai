@@ -61,11 +61,11 @@
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.1",
 		"@taplo/cli": "^0.7.0",
-		"@types/node": "^20.12.11",
+		"@types/node": "^20.12.12",
 		"@vitest/coverage-v8": "^1.6.0",
 		"eslint": "^8.57.0",
 		"lint-staged": "^15.2.2",
-		"npm-run-all2": "^6.1.2",
+		"npm-run-all2": "^6.2.0",
 		"prettier": "^3.2.5",
 		"vitest": "^1.6.0"
 	},
