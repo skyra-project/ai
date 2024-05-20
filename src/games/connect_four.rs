@@ -111,7 +111,7 @@ macro_rules! check_offsets {
 /// # Example
 ///
 /// ```rust
-/// let offsets = make_offset_array!(BOARD_WIDTH + 1, 0);
+/// let offsets = gen_offset_array!(BOARD_WIDTH + 1, 0);
 /// assert_eq!(offsets, [0, 8, 16, 24, 32, 40]);
 /// ```
 ///
@@ -127,7 +127,7 @@ macro_rules! check_offsets {
 ///     0 + (BOARD_WIDTH + 1) * 5, // BOARD_WIDTH * 5 + 5,
 /// ];
 /// ```
-macro_rules! make_offset_array {
+macro_rules! gen_offset_array {
 	($offset:expr, $base:expr) => {
 		[$base, $base + $offset * 1, $base + $offset * 2, $base + $offset * 3, $base + $offset * 4, $base + $offset * 5]
 	};
@@ -362,7 +362,7 @@ impl ConnectFour {
 	}
 
 	fn score_position_center_column(&self, player: Player) -> i32 {
-		const OFFSETS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH, 3);
+		const OFFSETS: [usize; BOARD_HEIGHT] = gen_offset_array!(BOARD_WIDTH, 3);
 
 		let mut score = 0;
 		for &index in &OFFSETS {
@@ -375,7 +375,7 @@ impl ConnectFour {
 	}
 
 	fn score_position_horizontal(&self, player: Player) -> i32 {
-		const POSITIONS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH, 0);
+		const POSITIONS: [usize; BOARD_HEIGHT] = gen_offset_array!(BOARD_WIDTH, 0);
 		const OFFSETS: [usize; BOARD_WIDTH] = [0, 1, 2, 3, 4, 5, 6];
 
 		let mut score = 0;
@@ -387,7 +387,7 @@ impl ConnectFour {
 	}
 
 	fn score_position_vertical(&self, player: Player) -> i32 {
-		const OFFSETS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH, 0);
+		const OFFSETS: [usize; BOARD_HEIGHT] = gen_offset_array!(BOARD_WIDTH, 0);
 
 		let mut score = 0;
 		for column in 0..BOARD_WIDTH {
@@ -398,7 +398,7 @@ impl ConnectFour {
 	}
 
 	fn score_position_diagonal_tl(&self, player: Player) -> i32 {
-		const OFFSETS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH + 1, 0);
+		const OFFSETS: [usize; BOARD_HEIGHT] = gen_offset_array!(BOARD_WIDTH + 1, 0);
 
 		let mut score = 0;
 
@@ -442,7 +442,7 @@ impl ConnectFour {
 	}
 
 	fn score_position_diagonal_tr(&self, player: Player) -> i32 {
-		const OFFSETS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH - 1, 0);
+		const OFFSETS: [usize; BOARD_HEIGHT] = gen_offset_array!(BOARD_WIDTH - 1, 0);
 		let mut score = 0;
 
 		// Calculate the score for 6-long diagonals:
@@ -1129,7 +1129,7 @@ mod tests {
 			test_invalid_offset: [create_cells!(), 7],
 		}
 
-		macro_rules! generate_test {
+		macro_rules! gen_test {
 			($($name:ident: [$cells:expr, $offset:expr],)*) => {
 			$(
 				#[test]
@@ -1141,7 +1141,7 @@ mod tests {
 			}
 		}
 
-		generate_test! {
+		gen_test! {
 			// test_0: omitted because out-of-range
 			test_1: [create_cells!(7, 14, 21, 28, 35), 0],
 			test_2: [create_cells!(14, 21, 28, 35), 7],
@@ -1174,7 +1174,7 @@ mod tests {
 			test_0: [create_cells!(0, 7, 14, 21, 28, 35), 0, 0],
 		}
 
-		macro_rules! generate_test {
+		macro_rules! gen_test {
 			($($name:ident: [$cells:expr, $offset:expr],)*) => {
 			$(
 				#[test]
@@ -1188,7 +1188,7 @@ mod tests {
 			}
 		}
 
-		generate_test! {
+		gen_test! {
 			test_1: [create_cells!(7, 14, 21, 28, 35), 0],
 			test_2: [create_cells!(14, 21, 28, 35), 7],
 			test_3: [create_cells!(21, 28, 35), 14],
@@ -1219,7 +1219,7 @@ mod tests {
 			test_already_unset: [create_cells!(35), 0, 0],
 		}
 
-		macro_rules! generate_test {
+		macro_rules! gen_test {
 			($($name:ident: [$cells:expr, $offset:expr],)*) => ($(
 				#[test]
 				fn $name() {
@@ -1231,7 +1231,7 @@ mod tests {
 			)*);
 		}
 
-		generate_test! {
+		gen_test! {
 			test_0: [create_cells!(0, 7, 14, 21, 28, 35), 0],
 			test_1: [create_cells!(7, 14, 21, 28, 35), 7],
 			test_2: [create_cells!(14, 21, 28, 35), 14],
@@ -1241,7 +1241,7 @@ mod tests {
 		}
 	}
 
-	macro_rules! generate_score_test {
+	macro_rules! gen_score_test {
 		($score:ident $($name:ident: [$cells:expr, $outcome:expr],)*) => ($(
 			#[test]
 			fn $name() {
@@ -1255,7 +1255,7 @@ mod tests {
 	mod score_position_center_column {
 		use super::super::*;
 
-		generate_score_test! {
+		gen_score_test! {
 			score_position_center_column
 
 			// _ _ _ _ _ _ _ (0..7)
@@ -1292,7 +1292,7 @@ mod tests {
 	mod score_position_horizontal {
 		use super::super::*;
 
-		generate_score_test! {
+		gen_score_test! {
 			score_position_horizontal
 
 			// _ _ _ _ _ _ _ (0..7)
@@ -1329,7 +1329,7 @@ mod tests {
 	mod score_position_vertical {
 		use super::super::*;
 
-		generate_score_test! {
+		gen_score_test! {
 			score_position_vertical
 
 			// _ _ _ _ _ _ _ (0..7)
@@ -1382,7 +1382,7 @@ mod tests {
 			test_invalid_offset: [create_cells!(0), 1, 1, 0, 0],
 		}
 
-		macro_rules! generate_test {
+		macro_rules! gen_test {
 			($($name:ident: [$cells:expr, $outcome:expr, $offset:expr, $remaining:expr, $alpha:expr, $beta:expr],)*) => ($(
 				#[test]
 				fn $name() {
@@ -1394,7 +1394,7 @@ mod tests {
 			)*);
 		}
 
-		generate_test! {
+		gen_test! {
 			test_machine_wins: [create_cells!(0, 1, 2, 3), OUTCOME_MACHINE_WINS, 0, 42, 0, 0],
 			test_draw: [create_cells!(0), 0, 0, 0, 0, 0],
 		}
@@ -1419,7 +1419,7 @@ mod tests {
 			test_invalid_offset: [create_cells!(0), 1, 1, 0, 0],
 		}
 
-		macro_rules! generate_test {
+		macro_rules! gen_test {
 			($($name:ident: [$cells:expr, $outcome:expr, $offset:expr, $remaining:expr, $alpha:expr, $beta:expr],)*) => ($(
 				#[test]
 				fn $name() {
@@ -1431,7 +1431,7 @@ mod tests {
 			)*);
 		}
 
-		generate_test! {
+		gen_test! {
 			test_human_wins: [create_cells!(0, 1, 2, 3), OUTCOME_HUMAN_WINS, 0, 42, 0, 0],
 		}
 	}
@@ -1439,7 +1439,7 @@ mod tests {
 	mod max_top {
 		use super::super::*;
 
-		macro_rules! generate_test {
+		macro_rules! gen_test {
 			($($name:ident: [$cells:expr, $outcome:expr],)*) => ($(
 				#[test]
 				fn $name() {
@@ -1451,7 +1451,7 @@ mod tests {
 			)*);
 		}
 
-		generate_test! {
+		gen_test! {
 			// _ _ _ _ _ _ _ (0..7)
 			// _ _ _ _ _ _ _ (7..14)
 			// _ _ _ _ _ _ _ (14..21)
