@@ -1,4 +1,8 @@
-use std::cmp;
+use std::{
+	cmp,
+	hint::unreachable_unchecked,
+	simd::{cmp::SimdPartialEq, u8x4, Mask, Simd},
+};
 
 use napi::{bindgen_prelude::Uint8Array, Error, Result};
 
@@ -8,9 +12,8 @@ pub const BOARD_WIDTH: usize = 7;
 pub const BOARD_HEIGHT: usize = 6;
 pub const BOARD_CELLS: usize = BOARD_WIDTH * BOARD_HEIGHT;
 
-const OUTCOME_HUMAN_WINS: i8 = -20;
-const OUTCOME_MACHINE_WINS: i8 = 20;
-const OUTCOME_DRAW: i8 = 0;
+const OUTCOME_HUMAN_WINS: i32 = -999_999_999;
+const OUTCOME_MACHINE_WINS: i32 = 999_999_999;
 
 const AVAILABLE_BOTTOM: [u8; BOARD_CELLS] = [
 	0b0011, 0b0011, 0b0011, 0b0011, 0b0011, 0b0011, 0b0011, //
@@ -51,11 +54,15 @@ const AVAILABLE_DIAGONAL_BL: [u8; BOARD_CELLS] = [
 pub type AiCells = [Player; BOARD_CELLS];
 pub type AiRemaining = [u8; BOARD_WIDTH];
 
+const SCORE_PLAYER_MASK_HUMAN: Simd<u8, 4> = u8x4::from_array([Player::Human as u8; 4]);
+const SCORE_PLAYER_MASK_MACHINE: Simd<u8, 4> = u8x4::from_array([Player::Machine as u8; 4]);
+
 #[napi]
 pub struct ConnectFour {
 	cells: AiCells,
 	remaining: AiRemaining,
 	empty: u8,
+	score_player_mask: Simd<u8, 4>,
 }
 
 /// Checks a series of pointer offsets to see if any overlapping groups of 4 are
@@ -96,6 +103,62 @@ macro_rules! check_offsets {
 	};
 }
 
+/// Makes an array of offsets based on a base offset and a multiplier.
+///
+/// This macro is used to generate the offsets for the various directions in the
+/// Connect Four game board.
+///
+/// # Example
+///
+/// ```rust
+/// let offsets = make_offset_array!(BOARD_WIDTH + 1, 0);
+/// assert_eq!(offsets, [0, 8, 16, 24, 32, 40]);
+/// ```
+///
+/// Which is equivalent to:
+///
+/// ```rust
+/// let offsets = [
+///     0, //
+///     0 + (BOARD_WIDTH + 1) * 1, // BOARD_WIDTH + 1
+///     0 + (BOARD_WIDTH + 1) * 2, // BOARD_WIDTH * 2 + 2,
+///     0 + (BOARD_WIDTH + 1) * 3, // BOARD_WIDTH * 3 + 3,
+///     0 + (BOARD_WIDTH + 1) * 4, // BOARD_WIDTH * 4 + 4,
+///     0 + (BOARD_WIDTH + 1) * 5, // BOARD_WIDTH * 5 + 5,
+/// ];
+/// ```
+macro_rules! make_offset_array {
+	($offset:expr, $base:expr) => {
+		[$base, $base + $offset * 1, $base + $offset * 2, $base + $offset * 3, $base + $offset * 4, $base + $offset * 5]
+	};
+}
+
+/// Converts a 4-bit bit mask in the form of a [`Mask`] to a count of the number
+/// of bits set to 1, which is used to determine the number of empty and player
+/// pieces in a window.
+///
+/// # Remarks
+///
+/// This function does not use `.count_ones()` because it produces more
+/// instructions, leading to a slower implementation. Because the number of
+/// possible bit masks is small, this function is implemented as a match
+/// statement.
+///
+/// # Safety
+///
+/// Undefined behaviour is caused if the bitmask is not a valid 4-bit bitmask,
+/// which is guaranteed by the [`Mask`] type.
+fn bitmask_to_count(mask: Mask<i8, 4>) -> u8 {
+	match mask.to_bitmask() {
+		0b0000 => 0,
+		0b0001 | 0b0010 | 0b0100 | 0b1000 => 1,
+		0b0011 | 0b0101 | 0b0110 | 0b1001 | 0b1010 | 0b1100 => 2,
+		0b0111 | 0b1011 | 0b1101 | 0b1110 => 3,
+		0b1111 => 4,
+		_ => unsafe { unreachable_unchecked() },
+	}
+}
+
 impl ConnectFour {
 	fn new(cells: AiCells) -> Self {
 		let remaining: [u8; BOARD_WIDTH] = unsafe {
@@ -107,7 +170,7 @@ impl ConnectFour {
 		};
 		let empty = remaining.iter().sum();
 
-		Self { cells, remaining, empty }
+		Self { cells, remaining, empty, score_player_mask: SCORE_PLAYER_MASK_HUMAN }
 	}
 
 	#[allow(clippy::too_many_arguments)]
@@ -228,14 +291,213 @@ impl ConnectFour {
 		self.cells[offset] = Player::Unset;
 	}
 
+	fn evaluate_window(&self, player: Player, window: &[u8; 4]) -> i32 {
+		debug_assert_ne!(player, Player::Unset);
+
+		const MASK_EMPTY: Simd<u8, 4> = u8x4::from_array([Player::Unset as u8; 4]);
+
+		let v = u8x4::from_slice(window);
+		let empty_pieces = bitmask_to_count(v.simd_eq(MASK_EMPTY));
+		let player_pieces = bitmask_to_count(v.simd_eq(self.score_player_mask));
+
+		// The sum of empty and player pieces must be less than or equal to 4:
+		debug_assert!(empty_pieces + player_pieces <= 4);
+		// Winning moves will never call this function:
+		debug_assert_ne!(player_pieces, 4);
+		// Losing moves will never call this function:
+		debug_assert_ne!(player_pieces + empty_pieces, 0);
+
+		// The mask is a combined octal pair, where the first octal represents
+		// the number of player pieces, and the last octal represents the
+		// number of empty pieces.
+		//
+		// Since the player pieces, opponent pieces, and empty pieces are
+		// mutually exclusive and sum to 4, these are the only fields
+		// required.
+		//
+		// For example, if there are no player pieces and 1 empty piece, there
+		// must be 3 opponent pieces - a state represented as `0o0_1`.
+		//
+		// There can be up to 4 empty pieces, and up to 3 pieces for the
+		// player or the opponent, since a 4th piece would be a winning move
+		// and would not reach this function.
+		let mask: u8 = (player_pieces << 3) | empty_pieces;
+
+		#[allow(clippy::manual_range_patterns)]
+		match mask {
+			// 4 player pieces: (winning move, cannot happen here)
+			0o4_0 => unsafe { unreachable_unchecked() },
+
+			// 3 player pieces:
+			0o3_1 => 100,
+			0o3_0 => 0,
+
+			// 2 player pieces:
+			0o2_2 => 10,
+			0o2_1 | 0o2_0 => 0,
+
+			// 1 player piece:
+			0o1_0 | 0o1_1 | 0o1_2 | 0o1_3 => 0,
+
+			// 0 player pieces:
+			// - 0 empty pieces (losing move, cannot happen here)
+			0o0_0 => unsafe { unreachable_unchecked() },
+			0o0_1 => -100,
+			0o0_2 => -10,
+			0o0_3 | 0o0_4 => 0,
+
+			// This should never happen:
+			_ => unsafe { unreachable_unchecked() },
+		}
+	}
+
+	#[inline(always)]
+	fn sum_windows(&self, player: Player, index: usize, offsets: &[usize], amount: usize) -> i32 {
+		debug_assert!(amount <= offsets.len());
+
+		(0..amount)
+			.map(|x| unsafe { *self.cells.get_unchecked(index + offsets[x]) }.into())
+			.map_windows(|window: &[u8; 4]| self.evaluate_window(player, window))
+			.sum()
+	}
+
+	fn score_position_center_column(&self, player: Player) -> i32 {
+		const OFFSETS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH, 3);
+
+		let mut score = 0;
+		for &index in &OFFSETS {
+			if unsafe { self.cells.get_unchecked(index).eq(&player) } {
+				score += 3;
+			}
+		}
+
+		score
+	}
+
+	fn score_position_horizontal(&self, player: Player) -> i32 {
+		const POSITIONS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH, 0);
+		const OFFSETS: [usize; BOARD_WIDTH] = [0, 1, 2, 3, 4, 5, 6];
+
+		let mut score = 0;
+		for &row in &POSITIONS {
+			score += self.sum_windows(player, row, &OFFSETS, 7);
+		}
+
+		score
+	}
+
+	fn score_position_vertical(&self, player: Player) -> i32 {
+		const OFFSETS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH, 0);
+
+		let mut score = 0;
+		for column in 0..BOARD_WIDTH {
+			score += self.sum_windows(player, column, &OFFSETS, 6);
+		}
+
+		score
+	}
+
+	fn score_position_diagonal_tl(&self, player: Player) -> i32 {
+		const OFFSETS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH + 1, 0);
+
+		let mut score = 0;
+
+		// Calculate the score for 6-long diagonals:
+		// X Y _ _ _ _ _ (0..7)
+		// _ X Y _ _ _ _ (7..14)
+		// _ _ X Y _ _ _ (14..21)
+		// _ _ _ X Y _ _ (21..28)
+		// _ _ _ _ X Y _ (28..35)
+		// _ _ _ _ _ X Y (35..42)
+		for index in [0, 1] {
+			score += self.sum_windows(player, index, &OFFSETS, 6);
+		}
+
+		// Calculate the score for 5-long diagonals:
+		// _ _ X _ _ _ _ (0..7)
+		// Y _ _ X _ _ _ (7..14)
+		// _ Y _ _ X _ _ (14..21)
+		// _ _ Y _ _ X _ (21..28)
+		// _ _ _ Y _ _ X (28..35)
+		// _ _ _ _ Y _ _ (35..42)
+		for index in [2, 7] {
+			score += self.sum_windows(player, index, &OFFSETS, 5);
+		}
+
+		// Calculate the score for 4-long diagonals:
+		// _ _ _ X _ _ _ (0..7)
+		// _ _ _ _ X _ _ (7..14)
+		// Y _ _ _ _ X _ (14..21)
+		// _ Y _ _ _ _ X (21..28)
+		// _ _ Y _ _ _ _ (28..35)
+		// _ _ _ Y _ _ _ (35..42)
+		for index in [3, 14] {
+			score += self.sum_windows(player, index, &OFFSETS, 4);
+		}
+
+		// We don't need to calculate the score for 3-long diagonals, as they are
+		// never going to be able to produce a winning move.
+
+		score
+	}
+
+	fn score_position_diagonal_tr(&self, player: Player) -> i32 {
+		const OFFSETS: [usize; BOARD_HEIGHT] = make_offset_array!(BOARD_WIDTH - 1, 0);
+		let mut score = 0;
+
+		// Calculate the score for 6-long diagonals:
+		// _ _ _ _ _ X Y (0..7)
+		// _ _ _ _ X Y _ (7..14)
+		// _ _ _ X Y _ _ (14..21)
+		// _ _ X Y _ _ _ (21..28)
+		// _ X Y _ _ _ _ (28..35)
+		// X Y _ _ _ _ _ (35..42)
+		for index in [5, 6] {
+			score += self.sum_windows(player, index, &OFFSETS, 6);
+		}
+
+		// Calculate the score for 5-long diagonals:
+		// _ _ _ _ X _ _ (0..7)
+		// _ _ _ X _ _ Y (7..14)
+		// _ _ X _ _ Y _ (14..21)
+		// _ X _ _ Y _ _ (21..28)
+		// X _ _ Y _ _ _ (28..35)
+		// _ _ Y _ _ _ _ (35..42)
+		for index in [4, 13] {
+			score += self.sum_windows(player, index, &OFFSETS, 5);
+		}
+
+		// Calculate the score for 4-long diagonals:
+		// _ _ _ X _ _ _ (0..7)
+		// _ _ X _ _ _ _ (7..14)
+		// _ X _ _ _ _ Y (14..21)
+		// X _ _ _ _ Y _ (21..28)
+		// _ _ _ _ Y _ _ (28..35)
+		// _ _ _ Y _ _ _ (35..42)
+		for index in [3, 20] {
+			score += self.sum_windows(player, index, &OFFSETS, 4);
+		}
+
+		score
+	}
+
+	fn score_position(&self, player: Player) -> i32 {
+		self.score_position_center_column(player)
+			+ self.score_position_horizontal(player)
+			+ self.score_position_vertical(player)
+			+ self.score_position_diagonal_tl(player)
+			+ self.score_position_diagonal_tr(player)
+	}
+
 	/// Minimum is `Player::Human`
-	fn min(&mut self, last_cell_offset: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
+	fn min(&mut self, last_cell_offset: usize, remaining: u8, alpha: i32, beta: i32) -> i32 {
 		if self.status(last_cell_offset) {
 			return OUTCOME_MACHINE_WINS;
 		}
 
 		if remaining == 0 {
-			return OUTCOME_DRAW;
+			self.score_player_mask = SCORE_PLAYER_MASK_HUMAN;
+			return self.score_position(Player::Human);
 		}
 
 		// Possible values for min_v are:
@@ -244,7 +506,7 @@ impl ConnectFour {
 		//  1 - loss
 		//
 		// We're initially setting it to 2 as worse than the worst case:
-		let mut min_v = i8::MAX;
+		let mut min_v = i32::MAX;
 		let mut local_beta = beta;
 
 		for c in 0..BOARD_WIDTH {
@@ -278,13 +540,14 @@ impl ConnectFour {
 	}
 
 	/// Maximum is `Player::Machine`
-	fn max(&mut self, last_cell_offset: usize, remaining: u8, alpha: i8, beta: i8) -> i8 {
+	fn max(&mut self, last_cell_offset: usize, remaining: u8, alpha: i32, beta: i32) -> i32 {
 		if self.status(last_cell_offset) {
 			return OUTCOME_HUMAN_WINS;
 		}
 
 		if remaining == 0 {
-			return OUTCOME_DRAW;
+			self.score_player_mask = SCORE_PLAYER_MASK_MACHINE;
+			return self.score_position(Player::Machine);
 		}
 
 		// Possible values for max_v are:
@@ -293,7 +556,7 @@ impl ConnectFour {
 		//  1 - win
 		//
 		// We're initially setting it to -2 as worse than the worst case:
-		let mut max_v = i8::MIN;
+		let mut max_v = i32::MIN;
 		let mut local_alpha = alpha;
 
 		for c in 0..BOARD_WIDTH {
@@ -331,10 +594,10 @@ impl ConnectFour {
 			return U_INVALID_INDEX;
 		}
 
-		const DEFAULT_ALPHA: i8 = i8::MIN;
-		const DEFAULT_BETA: i8 = i8::MAX;
+		const DEFAULT_ALPHA: i32 = i32::MIN;
+		const DEFAULT_BETA: i32 = i32::MAX;
 
-		let mut max_v = i8::MIN;
+		let mut max_v = i32::MIN;
 		let mut column = U_INVALID_INDEX;
 		for c in 0..BOARD_WIDTH {
 			if !self.available(c) {
@@ -355,11 +618,6 @@ impl ConnectFour {
 			if points > max_v {
 				max_v = points;
 				column = c;
-
-				// Break the loop earlier if we have found a winning move:
-				if points >= OUTCOME_MACHINE_WINS {
-					break;
-				}
 			}
 		}
 
@@ -414,6 +672,7 @@ impl ConnectFour {
 				cells: [Player::Unset; BOARD_CELLS],
 				remaining: [BOARD_HEIGHT as u8; BOARD_WIDTH],
 				empty: BOARD_CELLS as u8,
+				score_player_mask: SCORE_PLAYER_MASK_HUMAN,
 			})
 		}
 	}
@@ -982,6 +1241,128 @@ mod tests {
 		}
 	}
 
+	macro_rules! generate_score_test {
+		($score:ident $($name:ident: [$cells:expr, $outcome:expr],)*) => ($(
+			#[test]
+			fn $name() {
+				let board = ConnectFour::new($cells);
+				let score = board.$score(Player::Human);
+				assert_eq!(score, $outcome);
+			}
+		)*);
+	}
+
+	mod score_position_center_column {
+		use super::super::*;
+
+		generate_score_test! {
+			score_position_center_column
+
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ _ _ _ _ _ (28..35)
+			// _ _ _ _ _ _ _ (35..42)
+			test_empty_board: [create_cells!(), 0],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ _ _ _ _ _ (28..35)
+			// _ H H H _ _ _ (35..42)
+			test_human_one: [create_cells!(36, 37, 38), 3],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ _ H _ _ _ (28..35)
+			// _ H H H _ _ _ (35..42)
+			test_human_two: [create_cells!(31, 36, 37, 38), 6],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ H _ _ _ (21..28)
+			// _ _ _ H _ _ _ (28..35)
+			// _ H H H _ _ _ (35..42)
+			test_human_three: [create_cells!(24, 31, 36, 37, 38), 9],
+		}
+	}
+
+	mod score_position_horizontal {
+		use super::super::*;
+
+		generate_score_test! {
+			score_position_horizontal
+
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ _ _ _ _ _ (28..35)
+			// _ _ _ _ _ _ _ (35..42)
+			test_empty_board: [create_cells!(), 0],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ _ _ _ _ _ (28..35)
+			// _ _ _ H _ _ _ (35..42)
+			test_human_one: [create_cells!(38), 0],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ _ _ _ _ _ (28..35)
+			// _ _ H H _ _ _ (35..42)
+			test_human_two: [create_cells!(37, 38), 30],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ _ _ _ _ _ (28..35)
+			// _ H H H _ _ _ (35..42)
+			test_human_three: [create_cells!(36, 37, 38), 210],
+		}
+	}
+
+	mod score_position_vertical {
+		use super::super::*;
+
+		generate_score_test! {
+			score_position_vertical
+
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ _ _ _ _ _ (28..35)
+			// _ _ _ _ _ _ _ (35..42)
+			test_empty_board: [create_cells!(), 0],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ _ _ _ _ _ (28..35)
+			// _ _ _ H _ _ _ (35..42)
+			test_human_one: [create_cells!(38), 0],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ H _ _ _ _ (28..35)
+			// _ _ H _ _ _ _ (35..42)
+			test_human_two: [create_cells!(30, 37), 10],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ H _ _ _ _ (21..28)
+			// _ _ H _ _ _ _ (28..35)
+			// _ _ H _ _ _ _ (35..42)
+			test_human_three: [create_cells!(23, 30, 37), 110],
+		}
+	}
+
 	mod min {
 		use super::super::*;
 
@@ -1015,7 +1396,7 @@ mod tests {
 
 		generate_test! {
 			test_machine_wins: [create_cells!(0, 1, 2, 3), OUTCOME_MACHINE_WINS, 0, 42, 0, 0],
-			test_draw: [create_cells!(0), OUTCOME_DRAW, 0, 0, 0, 0],
+			test_draw: [create_cells!(0), 0, 0, 0, 0, 0],
 		}
 	}
 
@@ -1052,7 +1433,6 @@ mod tests {
 
 		generate_test! {
 			test_human_wins: [create_cells!(0, 1, 2, 3), OUTCOME_HUMAN_WINS, 0, 42, 0, 0],
-			test_draw: [create_cells!(0), OUTCOME_DRAW, 0, 0, 0, 0],
 		}
 	}
 
@@ -1064,7 +1444,7 @@ mod tests {
 				#[test]
 				fn $name() {
 					let mut board = ConnectFour::new($cells);
-					let max = board.max_top(7);
+					let max = board.max_top(5);
 
 					assert_eq!(max, $outcome);
 				}
@@ -1072,13 +1452,34 @@ mod tests {
 		}
 
 		generate_test! {
-			// this case isn't very accurate considering an empty board would always give 3
-			// but cause we're testing max_top rather than get_best_move, that hardcoded choice doesn't happen
-			test_empty_board: [create_cells!(), 0],
-			test_stop_horizontal_winning_move: [create_cells!(0, 1, 2), 3],
-			test_stop_vertical_winning_move: [create_cells!(7, 14, 28), 0],
-			test_stop_tl_br_winning_move: [create_cells!(0, 8, 16, 31), 3],
-			test_stop_bl_tr_winning_move: [create_cells!(21, 15, 9, 10), 3],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ _ _ _ (14..21)
+			// _ _ _ _ _ _ _ (21..28)
+			// _ _ _ _ _ _ _ (28..35)
+			// H H H v _ _ _ (35..42)
+			test_stop_horizontal_winning_move: [create_cells!(35, 36, 37), 3],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// v _ _ _ _ _ _ (14..21)
+			// H _ _ _ _ _ _ (21..28)
+			// H _ _ _ _ _ _ (28..35)
+			// H _ _ _ _ _ _ (35..42)
+			test_stop_vertical_winning_move: [create_cells!(21, 28, 35), 0],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ H _ _ _ _ _ (14..21)
+			// _ _ H _ _ _ _ (21..28)
+			// _ _ _ H _ _ _ (28..35)
+			// _ _ _ _ v _ _ (35..42)
+			test_stop_tl_br_winning_move: [create_cells!(15, 23, 31), 4],
+			// _ _ _ _ _ _ _ (0..7)
+			// _ _ _ _ _ _ _ (7..14)
+			// _ _ _ _ H _ _ (14..21)
+			// _ _ _ H _ _ _ (21..28)
+			// _ _ H _ _ _ _ (28..35)
+			// _ v _ _ _ _ _ (35..42)
+			test_stop_bl_tr_winning_move: [create_cells!(18, 24, 30), 1],
 		}
 	}
 }

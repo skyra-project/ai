@@ -1,4 +1,6 @@
 #![deny(clippy::all)]
+#![feature(portable_simd)]
+#![feature(iter_map_windows)]
 
 #[macro_use]
 extern crate napi_derive;
@@ -9,11 +11,18 @@ mod games {
 }
 
 #[napi]
+#[repr(u8)]
 #[derive(Debug, PartialEq)]
 pub enum Player {
 	Unset,
 	Human,
 	Machine,
+}
+
+impl From<Player> for u8 {
+	fn from(value: Player) -> Self {
+		unsafe { std::mem::transmute_copy(&value) }
+	}
 }
 
 impl TryFrom<u8> for Player {
