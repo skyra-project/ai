@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/skyra-project/ai/compare/v1.2.1...v2.0.0) (2024-05-20)
+
+### Refactors
+
+-   **connect-four:** add board evaluation ([#228](https://github.com/skyra-project/ai/issues/228)) ([213c585](https://github.com/skyra-project/ai/commit/213c58579d3937798a41e7ea0dbf7fde2b228ccf))
+-   switch to Rust ([#131](https://github.com/skyra-project/ai/issues/131)) ([7260e2c](https://github.com/skyra-project/ai/commit/7260e2c7d95e3d8a22280ab50dc23f928d94bb53))
+
 ## [1.2.0](https://github.com/skyra-project/ai/compare/v1.1.1...v1.2.0) (2021-05-19)
 
 ### Features
