@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.1](https://github.com/skyra-project/ai/compare/v2.0.0...v2.0.1) (2024-05-26)
+
+### CI
+
+-   use `macos-13` for `x86_64-apple-darwin` ([#231](https://github.com/skyra-project/ai/issues/231)) ([2a0bc7d](https://github.com/skyra-project/ai/commit/2a0bc7dc47a1f99872a1c5f271b87b44868ca9c4))
+
 ## [2.0.0](https://github.com/skyra-project/ai/compare/v1.2.1...v2.0.0) (2024-05-20)
 
 ### Refactors
