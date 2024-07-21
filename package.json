@@ -61,13 +61,13 @@
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.1",
 		"@taplo/cli": "^0.7.0",
-		"@types/node": "^20.14.10",
-		"@vitest/coverage-v8": "^2.0.2",
+		"@types/node": "^20.14.11",
+		"@vitest/coverage-v8": "^2.0.3",
 		"eslint": "^8.57.0",
 		"lint-staged": "^15.2.7",
 		"npm-run-all2": "^6.2.2",
 		"prettier": "^3.3.3",
-		"vitest": "^2.0.2"
+		"vitest": "^2.0.3"
 	},
 	"resolutions": {
 		"minimist": "^1.2.8"
