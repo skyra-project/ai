@@ -54,20 +54,20 @@
 		}
 	},
 	"devDependencies": {
-		"@commitlint/cli": "^19.4.1",
-		"@commitlint/config-conventional": "^19.4.1",
+		"@commitlint/cli": "^19.5.0",
+		"@commitlint/config-conventional": "^19.5.0",
 		"@napi-rs/cli": "^2.18.4",
 		"@sapphire/eslint-config": "^5.0.5",
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.1",
 		"@taplo/cli": "^0.7.0",
 		"@types/node": "^20.16.5",
-		"@vitest/coverage-v8": "^2.0.5",
+		"@vitest/coverage-v8": "^2.1.1",
 		"eslint": "^8.57.0",
 		"lint-staged": "^15.2.10",
-		"npm-run-all2": "^6.2.2",
+		"npm-run-all2": "^6.2.3",
 		"prettier": "^3.3.3",
-		"vitest": "^2.0.5"
+		"vitest": "^2.1.1"
 	},
 	"resolutions": {
 		"minimist": "^1.2.8"
@@ -113,5 +113,5 @@
 	"eslintConfig": {
 		"extends": "@sapphire"
 	},
-	"packageManager": "yarn@4.4.1"
+	"packageManager": "yarn@4.5.0"
 }
