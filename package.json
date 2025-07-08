@@ -61,7 +61,7 @@
 		"@sapphire/prettier-config": "^2.0.0",
 		"@sapphire/ts-config": "^5.0.1",
 		"@taplo/cli": "^0.7.0",
-		"@types/node": "^22.15.34",
+		"@types/node": "^22.16.1",
 		"@vitest/coverage-v8": "^3.2.4",
 		"eslint": "^8.57.1",
 		"lint-staged": "^16.1.2",
