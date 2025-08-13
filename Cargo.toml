@@ -14,8 +14,8 @@ crate-type = ["cdylib"]
 
 [dependencies]
 itertools = "0.14.0"
-napi = { version = "2.16.4", default-features = false, features = ["napi8"] }
-napi-derive = "2.16.3"
+napi = { version = "3.0.0", default-features = false, features = ["napi8"] }
+napi-derive = "3.0.0"
 
 [build-dependencies]
 napi-build = "2.1.3"
