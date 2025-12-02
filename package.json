@@ -62,12 +62,12 @@
 		"@sapphire/ts-config": "^5.0.1",
 		"@taplo/cli": "^0.7.0",
 		"@types/node": "^24.10.0",
-		"@vitest/coverage-v8": "^3.2.4",
+		"@vitest/coverage-v8": "^4.0.15",
 		"eslint": "^8.57.1",
 		"lint-staged": "^16.1.2",
 		"npm-run-all2": "^8.0.4",
 		"prettier": "^3.6.2",
-		"vitest": "^3.2.4"
+		"vitest": "^4.0.15"
 	},
 	"resolutions": {
 		"minimist": "^1.2.8"
